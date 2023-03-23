@@ -58,11 +58,13 @@ last_detection_time = datetime.datetime.now() - datetime.timedelta(seconds=check
 def preprocess_image(image):
 
     width, height = image.size # Get the width and height of the image
-    middle_height = height // 2 # Get the center
-    top_margin = middle_height - 170 # Adjust this value to move the top of the region up or down
-    bottom_margin = middle_height - 145 # Adjust this value to move the bottom of the region up or down
-
-    region = (295, top_margin, width - 250, bottom_margin)
+    
+    left = width * 0.307
+    right = width * 0.74
+    top = height * 0.1852
+    bottom = height * 0.23148
+    
+    region = (left, top, right, bottom)
     image = image.crop(region)
     # image = ImageOps.grayscale(image)
     # image = image.point(lambda x: 0 if x < 210 else 255)
