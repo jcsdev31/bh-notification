@@ -46,7 +46,7 @@ banner_texts = [
 
 
 # Set the Discord webhook URL
-discord_webhook_url = "https://discord.com/api/webhooks/1087725250902507551/Ay_OJVx8JFqIpHLwUEDns7C7hcGxYxQjmcxPCvY-4MHyw84LJl662HdytdQeeDvWVi5A"
+discord_webhook_url = "https://discord.com/api/webhooks/1088431963427315772/jQ_YAI-l4EwiCYINnUbcqpHgAx7eJ4KkE7VoXa1VM6vwYVpf-n6q6-bSeC_4d937-k4y"
 
 # Set the interval in seconds to check the game screen
 check_interval = 3
@@ -55,7 +55,7 @@ check_interval = 3
 last_detection_time = datetime.datetime.now() - datetime.timedelta(seconds=check_interval)
 
 # Set the window title to capture
-window_title = "BH Test"
+window_title = "Ready Player 1"
 
 # Get the window handle
 hwnd = win32gui.FindWindow(None, window_title)
@@ -64,14 +64,18 @@ hwnd = win32gui.FindWindow(None, window_title)
 def preprocess_image(image):
 
     width, height = image.size # Get the width and height of the image
-    middle_height = height // 2 # Get the center
-    top_margin = middle_height - 170 # Adjust this value to move the top of the region up or down
-    bottom_margin = middle_height - 145 # Adjust this value to move the bottom of the region up or down
+    
+    # Ignores Title Bar for region calculation
+    title_height = 30
 
-    region = (295, top_margin, width - 250, bottom_margin)
-    image = image.crop(region)
-    image = ImageOps.grayscale(image)
-    image = image.point(lambda x: 0 if x < 210 else 255)
+    left = width * 0.307
+    right = width * 0.74
+    top = (height * 0.1852) + title_height
+    bottom = (height * 0.23148) + title_height
+
+    image = image.crop((left, top, right, bottom))
+    # image = ImageOps.grayscale(image)
+    # image = image.point(lambda x: 0 if x < 210 else 255)
 
     return image
 
@@ -89,16 +93,12 @@ while True:
 
     # Take a screenshot of the whole window
     screenshot = ImageGrab.grab(bbox=(left, top, right, bottom))
-   
-    # Convert the screenshot to a Pillow Image object
-    image = screenshot.convert("L")
     
     # Pre-Process the Image Object
-    image = preprocess_image(image)
+    image = preprocess_image(screenshot)
 
     # Extract text from the image using Tesseract OCR
     extracted_text = pytesseract.image_to_string(image)
-    print(extracted_text)
 
     # Check if the banner text is present in the extracted text
     for banner_text in banner_texts:
