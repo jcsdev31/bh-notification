@@ -55,31 +55,30 @@ check_interval = 3
 last_detection_time = datetime.datetime.now() - datetime.timedelta(seconds=check_interval)
 
 # Set the window title to capture
-window_title = "Ready Player 1"
+window_title = "BH Test"
 
 # Get the window handle
 hwnd = win32gui.FindWindow(None, window_title)
 
 # Pre-Process Image for OCR
 def preprocess_image(image):
-    # Convert to grayscale
+
+    width, height = image.size # Get the width and height of the image
+    middle_height = height // 2 # Get the center
+    top_margin = middle_height - 170 # Adjust this value to move the top of the region up or down
+    bottom_margin = middle_height - 145 # Adjust this value to move the bottom of the region up or down
+
+    region = (295, top_margin, width - 250, bottom_margin)
+    image = image.crop(region)
     image = ImageOps.grayscale(image)
-
-    # Apply histogram equalization
-    image = ImageOps.equalize(image)
-
-    # Apply binary threshold
-    image = image.point(lambda x: 0 if x < 128 else 255, '1')
-
-    # Apply sharpening filter
-    image = image.filter(ImageFilter.SHARPEN)
+    image = image.point(lambda x: 0 if x < 210 else 255)
 
     return image
 
 # Loop indefinitely
 while True:
     # Get the current time
-    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    current_time = datetime.datetime.now().strftime("%H:%M:%S")
 
     # Get the dimensions of the client area of the window
     client_rect = win32gui.GetClientRect(hwnd)

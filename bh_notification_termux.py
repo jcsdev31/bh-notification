@@ -64,8 +64,8 @@ def preprocess_image(image):
 
     region = (295, top_margin, width - 250, bottom_margin)
     image = image.crop(region)
-    image = ImageOps.grayscale(image)
-    image = image.point(lambda x: 0 if x < 210 else 255)
+    # image = ImageOps.grayscale(image)
+    # image = image.point(lambda x: 0 if x < 210 else 255)
 
     return image
 

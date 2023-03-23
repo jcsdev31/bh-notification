@@ -1,7 +1,7 @@
 from PIL import Image, ImageOps, ImageFilter
 import pytesseract
 
-image_file = "screenshot.png"
+image_file = "images/screenshot.png"
 img = Image.open(image_file)
 
 def get_region(image):
@@ -14,17 +14,17 @@ def get_region(image):
 region = get_region(img)
 img = img.crop(region)
 
-img.save("cropped_raw.png")
+img.save("images/cropped_raw.png")
 
 # Binarization
 def grayscale(image):
     return ImageOps.grayscale(image)
 
 gray_image = grayscale(img)
-gray_image.save("gray.png")
+gray_image.save("images/gray.png")
 
 im_bw = gray_image.point(lambda x: 0 if x < 210 else 255)
-im_bw.save("binarized.png")
+im_bw.save("images/binarized.png")
 
 # Noise Removal
 def noise_removal(image):
@@ -35,7 +35,7 @@ def noise_removal(image):
     return image
 
 no_noise = noise_removal(im_bw)
-no_noise.save("no_noise.png")
+no_noise.save("images/no_noise.png")
 
 # Dilation and Erosion
 def thin_font(image):
@@ -46,7 +46,7 @@ def thin_font(image):
     return image
 
 eroded_image = thin_font(no_noise)
-eroded_image.save("eroded_image.png")
+eroded_image.save("images/eroded_image.png")
 
 def thick_font(image):
     kernel = Image.new("1", (2, 2), 1)
@@ -56,4 +56,4 @@ def thick_font(image):
     return image
 
 dilated_image = thick_font(no_noise)
-dilated_image.save("dilated_image.png")
+dilated_image.save("images/dilated_image.png")
