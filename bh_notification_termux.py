@@ -46,7 +46,7 @@ banner_texts = [
 
 
 # Set the Discord webhook URL
-discord_webhook_url = "https://discord.com/api/webhooks/1088429501521866762/P_oqvJPTbtIEK7J1dPAPBU6gA1izISkMiiBpNshi9_ImqXz-je-SEmguR1wH3nuxEsLZ"
+discord_webhook_url = "https://discord.com/api/webhooks/1088430658579333123/zNvkUs4BPl7jFhfCgG00H9dwAnPydUvJUTvyJSiffcnD484QHeUESNtpDAmV1jexGBMv"
 
 # Set the interval in seconds to check the game screen
 check_interval = 3
