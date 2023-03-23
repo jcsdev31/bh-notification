@@ -78,7 +78,7 @@ while True:
     current_time = datetime.datetime.now().strftime("%H:%M:%S")
 
     # Capture a screenshot of the device screen using the screencap command
-    os.system('screencap /home/userland/bh-notification/screenshot.png')
+    os.system('scrot /home/userland/bh-notification/screenshot.png')
 
     # Open the captured screenshot using the PIL module
     with Image.open('/home/userland/bh-notification/screenshot.png') as screenshot:
