@@ -78,16 +78,16 @@ while True:
     current_time = datetime.datetime.now().strftime("%H:%M:%S")
 
     # Capture a screenshot of the device screen using the screencap command
-    os.system('screencap /storage/emulated/0/screenshot.png')
+    os.system('screencap /home/userland/bh-notification/screenshot.png')
 
     # Open the captured screenshot using the PIL module
-    with Image.open('/storage/emulated/0/screenshot.png') as screenshot:
+    with Image.open('/home/userland/bh-notification/screenshot.png') as screenshot:
 
         # Pre-Process the Image Object
         # image = screenshot.resize((screenshot.width * 3, screenshot.height * 3))
         image = preprocess_image(screenshot)
 
-        image.save('/storage/emulated/0/screenshot_processed.png')
+        image.save('/home/userland/bh-notification/screenshot.png')
 
 
         # Extract text from the image using Tesseract 
