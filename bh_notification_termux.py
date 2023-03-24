@@ -5,9 +5,13 @@ import datetime
 import requests
 import json
 from PIL import Image, ImageOps, ImageFilter
+import logging
 
 # Set the path to the Tesseract executable
 pytesseract.pytesseract.tesseract_cmd = "/data/data/com.termux/files/usr/bin/tesseract"
+
+# Set up logging
+logging.basicConfig(filename='http_request_errors.log', level=logging.ERROR)
 
 # Set the banner text to monitor for
 banner_texts = [    
@@ -46,7 +50,7 @@ banner_texts = [
 
 
 # Set the Discord webhook URL
-discord_webhook_url = "https://discord.com/api/webhooks/1088448051510788156/hkvHVzVmKoc-BbSJxqk1uNqPE9UhIzBCOJxwxArC_kvyTTZM1990GaVPB5Q0qP08_9fO"
+discord_webhook_url = "https://discord.com/api/webhooks/1088786501141278791/aLcDayhPzNSGBdzfBuZxX_Gqmt0a1dMdUV0HF3emzHyy0HTZfZ1m6-XHdTv26aGtQ3C1"
 
 # Set the interval in seconds to check the game screen
 check_interval = 3
@@ -186,6 +190,10 @@ while True:
                     # Check if the notification was sent successfully
                     if response.status_code == 204:
                         print(f"Notification sent at {current_time}")
+
+                    # Check for errors in the response
+                    if response.status_code != 200:
+                        logging.error(f'HTTP request failed with status code {response.status_code}')
 
                     # Break out of the loop once a banner text is detected and a message is sent
                     break
