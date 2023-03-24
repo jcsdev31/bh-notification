@@ -1,9 +1,6 @@
 import pytesseract
 import os
-import time
 import datetime
-import requests
-import json
 from PIL import Image, ImageOps, ImageFilter
 import discord
 from discord import Intents
@@ -47,14 +44,8 @@ banner_texts = [
     "Naght Sieger will",
     "Coelacanth will",]
 
-# Set the interval in seconds to check the game screen
-check_interval = 3
-
 # Set the Discord bot token
 bot_token = "
-
-# Set the ID of the Discord channel to send messages to
-channel_id = "1087725231159914606"
 
 intents = discord.Intents.default()
 
@@ -82,13 +73,17 @@ def preprocess_image(image):
 @client.event
 async def on_ready():
 
+    # Set the interval in seconds to check the game screen
+    check_interval = 3
+
+    # Set the ID of the Discord channel to send messages to
+    channel_id = "1087725231159914606"
+
     # Keep track of the last time the banner text was detected
     last_detection_time = datetime.datetime.now() - datetime.timedelta(seconds=check_interval)
 
     # Loop indefinitely
     while True:
-        # Get the current time
-        current_time = datetime.datetime.now().strftime("%H:%M:%S")
 
         # Capture a screenshot of the device screen using the screencap command
         os.system('screencap /storage/emulated/0/screenshot.png')
