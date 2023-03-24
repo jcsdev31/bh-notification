@@ -7,6 +7,8 @@ import json
 from PIL import Image, ImageOps, ImageFilter
 import logging
 
+debug_run_count = 0
+
 # Set the path to the Tesseract executable
 pytesseract.pytesseract.tesseract_cmd = "/data/data/com.termux/files/usr/bin/tesseract"
 
@@ -50,7 +52,7 @@ banner_texts = [
 
 
 # Set the Discord webhook URL
-discord_webhook_url = "https://discord.com/api/webhooks/1088807773917159455/ElrKNO9SY99EvlokY4GxMODcebj8WWaZrpkIj0ubQoiwtkFm_Y-UqzYKZf23utXUUxPd"
+discord_webhook_url = "https://discord.com/api/webhooks/1088813475205238845/n1YLTA_4Ql9whyAp7zLvvfbIthcekD9qO7Vic_7X8mgcSkqCzu6bbLGAflbGSuEvN3Rr"
 
 # Set the interval in seconds to check the game screen
 check_interval = 3
@@ -107,11 +109,15 @@ while True:
             if banner_text in extracted_text:
                 # Calculate the time since the last detection
                 time_since_last_detection = datetime.datetime.now() - last_detection_time
+                debug_run_count += 1
+                logging.info(f"Debug run: {debug_run_count} First Checkpoint")
 
                 # Only send a notification if enough time has elapsed since the last detection
                 if time_since_last_detection > datetime.timedelta(seconds=10):
                     # Update the last detection time
                     last_detection_time = datetime.datetime.now()
+
+                    logging.info(f"Debug run: {debug_run_count} Second Checkpoint")
     
                     # Choose a message to send based on the detected banner text
                     if banner_text == "Mistress will":
@@ -187,13 +193,16 @@ while True:
                     # Send the notification to the Discord webhook
                     response = requests.post(discord_webhook_url, data=json.dumps(message), headers={"Content-Type": "application/json"})
 
+                    logging.info(f"Debug run: {debug_run_count} After Request:")
+                    logging.info(f"{response} \n Status Code: {response.status_code}")
+
                     # Check if the notification was sent successfully
                     if response.status_code == 204:
                         print(f"Notification sent at {current_time}")
 
                     # Check for errors in the response
                     if response.status_code != 200:
-                        logging.error(f'HTTP request failed with status code {response.status_code} for webhook URL: {discord_webhook_url}')
+                        logging.error(f'Debug run: {debug_run_count} HTTP request failed with status code {response.status_code} for webhook URL: {discord_webhook_url}')
 
                     # Break out of the loop once a banner text is detected and a message is sent
                     break
