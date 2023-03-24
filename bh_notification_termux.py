@@ -50,31 +50,13 @@ banner_texts = [
 # Set the interval in seconds to check the game screen
 check_interval = 3
 
-# Keep track of the last time the banner text was detected
-last_detection_time = datetime.datetime.now() - datetime.timedelta(seconds=check_interval)
-
 # Set the Discord bot token
-bot_token = 
-MTA4O
-Dg1MT
-E1NjA
-4NTc4
-NDU4N
-w.GRV
-cFc.r
-lcjEZ
-ihHK
-62zw
-MZxOvN
-1-ZGp
-CHwgB0
-k115Jik
+bot_token = "
 
 # Set the ID of the Discord channel to send messages to
 channel_id = "1087725231159914606"
 
-intents = Intents.default()
-intents.members = True
+intents = discord.Intents.default()
 
 # Create a Discord client
 client = discord.Client(intents=intents)
@@ -99,6 +81,9 @@ def preprocess_image(image):
 # Event listener for when the bot is ready
 @client.event
 async def on_ready():
+
+    # Keep track of the last time the banner text was detected
+    last_detection_time = datetime.datetime.now() - datetime.timedelta(seconds=check_interval)
 
     # Loop indefinitely
     while True:
