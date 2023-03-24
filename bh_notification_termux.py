@@ -50,7 +50,7 @@ banner_texts = [
 
 
 # Set the Discord webhook URL
-discord_webhook_url = "https://discord.com/api/webhooks/1088797584384065556/7_8Gkv3iB6w3As8d91_xaNuwmIQLO0H30AvgZeJAHUjGYrTPL9RZizQD68py8dwLcHGI"
+discord_webhook_url = "https://discord.com/api/webhooks/1088807773917159455/ElrKNO9SY99EvlokY4GxMODcebj8WWaZrpkIj0ubQoiwtkFm_Y-UqzYKZf23utXUUxPd"
 
 # Set the interval in seconds to check the game screen
 check_interval = 3
@@ -193,7 +193,7 @@ while True:
 
                     # Check for errors in the response
                     if response.status_code != 200:
-                        logging.error(f'HTTP request failed with status code {response.status_code}')
+                        logging.error(f'HTTP request failed with status code {response.status_code} for webhook URL: {discord_webhook_url}')
 
                     # Break out of the loop once a banner text is detected and a message is sent
                     break
