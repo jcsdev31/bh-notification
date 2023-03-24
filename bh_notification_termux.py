@@ -13,7 +13,7 @@ debug_run_count = 0
 pytesseract.pytesseract.tesseract_cmd = "/data/data/com.termux/files/usr/bin/tesseract"
 
 # Set up logging
-logging.basicConfig(filename='http_request_errors.log', level=logging.ERROR)
+logging.basicConfig(filename='http_request_errors.log', level=logging.DEBUG)
 
 # Set the banner text to monitor for
 banner_texts = [    
@@ -52,7 +52,7 @@ banner_texts = [
 
 
 # Set the Discord webhook URL
-discord_webhook_url = "https://discord.com/api/webhooks/1088813475205238845/n1YLTA_4Ql9whyAp7zLvvfbIthcekD9qO7Vic_7X8mgcSkqCzu6bbLGAflbGSuEvN3Rr"
+discord_webhook_url = "https://discord.com/api/webhooks/1088817998221033562/pWBhsvdHBPvcK00JwUmdlMzAX1xCXMPRU1cQ8Vn6IPszBHXtWlJXdsFAo6ZROQNDg9oH"
 
 # Set the interval in seconds to check the game screen
 check_interval = 3
