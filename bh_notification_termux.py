@@ -50,7 +50,7 @@ banner_texts = [
 
 
 # Set the Discord webhook URL
-discord_webhook_url = "https://discord.com/api/webhooks/1088786501141278791/aLcDayhPzNSGBdzfBuZxX_Gqmt0a1dMdUV0HF3emzHyy0HTZfZ1m6-XHdTv26aGtQ3C1"
+discord_webhook_url = "https://discord.com/api/webhooks/1088797584384065556/7_8Gkv3iB6w3As8d91_xaNuwmIQLO0H30AvgZeJAHUjGYrTPL9RZizQD68py8dwLcHGI"
 
 # Set the interval in seconds to check the game screen
 check_interval = 3
@@ -181,7 +181,7 @@ while True:
 
                     # Create the Discord notification message
                     message = {
-                        "content": f"{message_text} Announcement Banner Detected at:{current_time}"
+                        "content": f"{message_text}"
                     }
 
                     # Send the notification to the Discord webhook
