@@ -77,7 +77,7 @@ async def on_ready():
     check_interval = 3
 
     # Set the ID of the Discord channel to send messages to
-    channel_id = 1087725231159914606
+    channel_id = 1088430354160959488
 
     # Keep track of the last time the banner text was detected
     last_detection_time = datetime.datetime.now() - datetime.timedelta(seconds=check_interval)
