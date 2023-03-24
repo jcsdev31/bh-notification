@@ -6,6 +6,7 @@ import requests
 import json
 from PIL import Image, ImageOps, ImageFilter
 import discord
+from discord import Intents
 import asyncio
 
 # Set the path to the Tesseract executable
@@ -53,13 +54,30 @@ check_interval = 3
 last_detection_time = datetime.datetime.now() - datetime.timedelta(seconds=check_interval)
 
 # Set the Discord bot token
-bot_token = "MTA4ODg1MTE1NjA4NTc4NDU4Nw.G5Hpkp.BZuja-VwIvK3Ouox-nOKgRjCQi3BM9QhKi_KPg"
+bot_token = 
+MTA4O
+Dg1MT
+E1NjA
+4NTc4
+NDU4N
+w.GRV
+cFc.r
+lcjEZ
+ihHK
+62zw
+MZxOvN
+1-ZGp
+CHwgB0
+k115Jik
 
 # Set the ID of the Discord channel to send messages to
 channel_id = "1087725231159914606"
 
+intents = Intents.default()
+intents.members = True
+
 # Create a Discord client
-client = discord.Client()
+client = discord.Client(intents=intents)
 
 # Pre-Process Image for OCR
 def preprocess_image(image):
