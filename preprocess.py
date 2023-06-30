@@ -1,14 +1,14 @@
 from PIL import Image, ImageOps, ImageFilter
 import pytesseract
 
-image_file = "images/pc_raw.png"
+image_file = "images/mini1-4.png"
 img = Image.open(image_file)
 
 def get_region(image):
     width, height = image.size
     
     # Ignores Title Bar for region calculation
-    title_height = 30
+    #title_height = 30
 
     print(width, height)
     
@@ -17,11 +17,11 @@ def get_region(image):
     top = height * 0.1852
     bottom = height * 0.23148
 
-    print(left, top + title_height, right, bottom)
+    print(left, top, right, bottom)
     middle_height = height // 2
     top_margin = middle_height - 85 # Adjust this value to move the top of the region up or down
     bottom_margin = middle_height # Adjust this value to move the bottom of the region up or down
-    return (left, top + title_height, right, bottom + title_height)
+    return (left, top, right, bottom)
 
 # 960,540
 # 295, 
