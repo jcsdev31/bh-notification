@@ -11,19 +11,28 @@ from PIL import Image, ImageOps, ImageFilter
 import pytesseract
 from fuzzywuzzy import fuzz
 
-# This is for the Appium Connection
-desired_caps = {
-    "platformName": "Android",
-    "deviceName": "Android Emulator",
-    "autoGrantPermissions": False,
-    "udid": "emulator-5554", # Change this with device name found in "adb devices" cmd
-    "noReset": True
-}
+def establish_appium_connection():
+    # Set the driver settings for Appium Connection
+    desired_caps = {
+        "platformName": "Android",
+        "deviceName": "Android Emulator",
+        "autoGrantPermissions": False,
+        "udid": "emulator-5554",  # Change this with device name found in "adb devices" cmd
+        "noReset": True
+    }
+
+    # Establish the Appium connection and return the driver object
+    driver = webdriver.Remote("http://localhost:4723/wd/hub", desired_caps)
+    return driver
+
+# Call the function to establish the Appium connection and assign the driver to a variable
+driver = establish_appium_connection()
+
 
 # Set the banner text to monitor for
 banner_texts = [   
-    "Storm Dragon w"
-    "Orc Disaster w" 
+    "Storm Dragon w",
+    "Orc Disaster w",
     "Mistress w",
     "Phreeoni w",
     "Kraken w",
@@ -150,13 +159,15 @@ appeared_img = cv2.imread('lookup/appeared.png')
 boss_status_img = [longer_time_img, short_time_img, refreshing_soon_img, appeared_img]
 
 # Set the Discord bot token
-bot_token = "MTA4ODg1MTE1NjA4NTc4NDU4Nw.GRVcFc.rlcjEZihHK62zwMZxOvN1-ZGpCHwgB0k115Jik"
+bot_token = ""
 
 intents = discord.Intents.default()
 
 # Create a Discord client
 client = discord.Client(intents=intents)
 
+# Set the ID of the Discord channel to send messages to
+channel_id = 1087725231159914606
 
 
 # Pre-Process Image for OCR
@@ -207,26 +218,23 @@ def check_in_image(small, big):
                 # The global image was found in the cropped image
                 return boss_status[i]
                 
-                
     else:
         return "Image lookup failed!"
 
 def swipeUp(start_y, end_y, duration):
-    global driver
     start_x = random.randint(155, 420)
     end_x = start_x + random.randint(1,10)
     duration = 500
     driver.swipe(start_x, start_y, end_x, end_y, duration)
 
 def save_image(screenshot_filename):
-    global driver
     screenshot_filepath = os.path.join(os.getcwd(), screenshot_filename)
     driver.save_screenshot(screenshot_filepath)
 
 def check_for_changes(boss_lookup, boss_group_filename, initialize):
 
     boss_group_img = cv2.imread(boss_group_filename)
-    message_text = "" # initialize an empty string to store messages
+    text_updates = "" # initialize an empty string to store changes
     
     for boss_name in boss_lookup:
         filename = '-'.join(boss_name.lower().split()) + ".png"
@@ -237,42 +245,42 @@ def check_for_changes(boss_lookup, boss_group_filename, initialize):
         if initialize == True:
             if new_boss_status == boss_status[0]:
                 boss[boss_name] = 0
-                message_text += f"```diff\n- {boss_name} : {boss_status[0]}\n```"
+                text_updates += f"```diff\n- {boss_name} : {boss_status[0]}\n```"
             elif new_boss_status == boss_status[1]:
                 boss[boss_name] = 1
-                message_text += f"```diff\n- {boss_name} : {boss_status[1]}\n```"
+                text_updates += f"```diff\n- {boss_name} : {boss_status[1]}\n```"
             elif new_boss_status == boss_status[2]:
                 boss[boss_name] = 2
-                message_text += f"```diff\n- {boss_name} : {boss_status[2]}\n```"
+                text_updates += f"```diff\n- {boss_name} : {boss_status[2]}\n```"
             elif new_boss_status == boss_status[3]:
                 boss[boss_name] = 3
-                message_text += f"```diff\n+ {boss_name} : {boss_status[3]}\n```"
+                text_updates += f"```diff\n+ {boss_name} : {boss_status[3]}\n```"
             else:
                 break
 
         if (new_boss_status != old_boss_status) and initialize == False:
             if new_boss_status == boss_status[0]:
-                message_text += f"```diff\n- {boss_name} was killed!\n```" # add message to the string
+                text_updates += f"```diff\n- {boss_name} was killed!\n```" # add message to the string
                 boss[boss_name] = 0
             elif new_boss_status == boss_status[1]:
-                #message_text += f"{boss_name} will spawn within 30 minutes!\n" # add message to the string
+                #text_updates += f"{boss_name} will spawn within 30 minutes!\n" # add message to the string
                 boss[boss_name] = 1
             elif new_boss_status == boss_status[2]:
-                #message_text += f"{boss_name} will spawn within 15 minutes!\n" # add message to the string
+                #text_updates += f"{boss_name} will spawn within 15 minutes!\n" # add message to the string
                 boss[boss_name] = 2
             elif new_boss_status == boss_status[3]:
-                message_text += f"```diff\n+ {boss_name} appeared!\n```" # add message to the string
+                text_updates += f"```diff\n+ {boss_name} appeared!\n```" # add message to the string
                 boss[boss_name] = 3
             else:
                 break    
             
     # Return the string containing all messages
-    return message_text
+    return text_updates
 
 
 def check_for_banners(filename):
-    global last_detection_time, driver
-    message_text = ""
+    
+    new_banner_text = "" # initialize an empty string to store detected banners
 
     # Open the captured screenshot using the PIL module
     with Image.open(filename) as screenshot:
@@ -280,7 +288,6 @@ def check_for_banners(filename):
         # Pre-Process the Image Object
         # image = screenshot.resize((screenshot.width * 3, screenshot.height * 3))
         image = preprocess_image(screenshot)
-
 
         # Extract text from the image using Tesseract 
         try:
@@ -294,21 +301,13 @@ def check_for_banners(filename):
         for banner_text in banner_texts:
             ratio = fuzz.partial_ratio(extracted_text, banner_text)
             if ratio >= 85:
-                # Calculate the time since the last detection
-                time_since_last_detection = datetime.datetime.now() - last_detection_time
-
-                # Only send a notification if enough time has elapsed since the last detection
-                if time_since_last_detection > datetime.timedelta(seconds=10):
-                    # Update the last detection time
-                    last_detection_time = datetime.datetime.now()
-    
-                    # Generate message sent to discord
-                    message_text += f"```\n {banner_lookup[banner_text]} will be spawning soon! Warriors, charge!\n```"
-                    banner_close_x = random.randint(710, 720)
-                    banner_close_y = random.randint(96, 110)
-                    driver.tap([(banner_close_x, banner_close_y)])
-                    # Break out of the loop once a banner text is detected and a message is sent
-                    break
+                # Generate message sent to discord
+                new_banner_text += f"```\n {banner_lookup[banner_text]} will be spawning soon! Warriors, charge!\n```"
+                banner_close_x = random.randint(710, 720)
+                banner_close_y = random.randint(96, 110)
+                driver.tap([(banner_close_x, banner_close_y)])
+                # Break out of the loop once a banner text is detected and a message is sent
+                break
             
             ratio = fuzz.partial_ratio(extracted_text, 'Adventurer')
             if ratio >= 90:
@@ -316,12 +315,26 @@ def check_for_banners(filename):
                 banner_close_y = random.randint(96, 110)
                 driver.tap([(banner_close_x, banner_close_y)])
                 break
+            
+            ratio = fuzz.partial_ratio(extracted_text, 'The item')
+            if ratio >= 90:
+                banner_close_x = random.randint(710, 720)
+                banner_close_y = random.randint(96, 110)
+                driver.tap([(banner_close_x, banner_close_y)])
+                break
 
-    return message_text
+            ratio = fuzz.partial_ratio(extracted_text, 'The next')
+            if ratio >= 90:
+                banner_close_x = random.randint(710, 720)
+                banner_close_y = random.randint(96, 110)
+                driver.tap([(banner_close_x, banner_close_y)])
+                break
+
+    return new_banner_text
 
 def check_cycle(initialize):
-    global message_text, driver
-    message_text = ""
+    # Store all updates here to be sent to discord
+    draft_message = ""
 
     # Open MVP/Mini Screen
     bh_button_x = random.randint(595, 625)
@@ -330,28 +343,28 @@ def check_cycle(initialize):
 
     time.sleep(0.5)
     save_image("mvp1-4.png")
-    message_text += check_for_changes(['Lord of the Dead', 'Fallen Bishop', 'Tao Gunka', 'Lost Dragon'], 'mvp1-4.png', initialize)
-    message_text += check_for_banners("mvp1-4.png")
-    print(message_text, flush=True)
+    draft_message += check_for_changes(['Lord of the Dead', 'Fallen Bishop', 'Tao Gunka', 'Lost Dragon'], 'mvp1-4.png', initialize)
+    draft_message += check_for_banners("mvp1-4.png")
+    print(draft_message, flush=True)
 
     swipeUp(185, 445, 500) # start_y, end_y, duration
     time.sleep(0.2)
     save_image("mvp5-8.png")
-    message_text += check_for_changes(['Morroc', 'Overseer of Time', 'Doppelganger', 'Amon Ra'], 'mvp5-8.png', initialize)
-    print(message_text, flush=True)
+    draft_message += check_for_changes(['Morroc', 'Overseer of Time', 'Doppelganger', 'Amon Ra'], 'mvp5-8.png', initialize)
+    print(draft_message, flush=True)
 
     swipeUp(185, 400, 500)
     time.sleep(0.2)
     save_image("mvp9-12.png")
-    message_text += check_for_changes(['Orc Lord', 'Pharaoh', 'Orc Hero', 'Maya'], 'mvp9-12.png', initialize)
-    message_text += check_for_banners("mvp9-12.png")
-    print(message_text, flush=True)
+    draft_message += check_for_changes(['Orc Lord', 'Pharaoh', 'Orc Hero', 'Maya'], 'mvp9-12.png', initialize)
+    draft_message += check_for_banners("mvp9-12.png")
+    print(draft_message, flush=True)
 
     swipeUp(185, 429.3, 200)
     time.sleep(0.2)
     save_image("mvp13-16.png")
-    message_text += check_for_changes(['Eddga', 'Kraken', 'Phreeoni', 'Mistress'], 'mvp13-16.png', initialize)
-    print(message_text, flush=True)
+    draft_message += check_for_changes(['Eddga', 'Kraken', 'Phreeoni', 'Mistress'], 'mvp13-16.png', initialize)
+    print(draft_message, flush=True)
 
     # Switch to Mini Tab
     mini_button_x = random.randint(205, 275)
@@ -360,28 +373,28 @@ def check_cycle(initialize):
 
     time.sleep(0.5)
     save_image("mini1-4.png")
-    message_text += check_for_changes(['Coelacanth', 'Naght Sieger', 'Necromancer', 'Ogretooth'], 'mini1-4.png', initialize)
-    message_text += check_for_banners("mini1-4.png")
-    print(message_text, flush=True)
+    draft_message += check_for_changes(['Coelacanth', 'Naght Sieger', 'Necromancer', 'Ogretooth'], 'mini1-4.png', initialize)
+    draft_message += check_for_banners("mini1-4.png")
+    print(draft_message, flush=True)
 
     swipeUp(185, 445, 500)
     time.sleep(0.2)
     save_image("mini5-8.png")
-    message_text += check_for_changes(['Mysteltainn', 'Chimera', 'Vagabond Wolf', 'Dark Priest'], 'mini5-8.png', initialize)
-    print(message_text, flush=True)
+    draft_message += check_for_changes(['Mysteltainn', 'Chimera', 'Vagabond Wolf', 'Dark Priest'], 'mini5-8.png', initialize)
+    print(draft_message, flush=True)
 
     swipeUp(185, 400, 500)
     time.sleep(0.2)
     save_image("mini9-12.png")
-    message_text += check_for_changes(['Angeling', 'Deviling', 'King Dramoh', 'Toad'], 'mini9-12.png', initialize)
-    print(message_text, flush=True)
+    draft_message += check_for_changes(['Angeling', 'Deviling', 'King Dramoh', 'Toad'], 'mini9-12.png', initialize)
+    print(draft_message, flush=True)
 
     swipeUp(185, 429.3, 200)
     time.sleep(0.2)
     save_image("mini13-16.png")
-    message_text += check_for_changes(['Ghostring', 'Mastering', 'Dragon Fly', 'Eclipse'], 'mini13-16.png', initialize)
-    message_text += check_for_banners("mini13-16.png")
-    print(message_text, flush=True)
+    draft_message += check_for_changes(['Ghostring', 'Mastering', 'Dragon Fly', 'Eclipse'], 'mini13-16.png', initialize)
+    draft_message += check_for_banners("mini13-16.png")
+    print(draft_message, flush=True)
 
     # Switch back to MVP Tab
     mvp_button_x = random.randint(108, 180)
@@ -395,21 +408,11 @@ def check_cycle(initialize):
     close_button_y = random.randint(30, 58)
     driver.tap([(close_button_x, close_button_y)])
 
-    return message_text
+    return draft_message
 
 # Event listener for when the bot is ready
 @client.event
 async def on_ready():
-    
-    global driver, message_text, last_detection_time
-
-    # Keep track of the last time the banner text was detected
-    last_detection_time = datetime.datetime.now() - datetime.timedelta(seconds=3)
-
-    driver = webdriver.Remote("http://localhost:4723/wd/hub", desired_caps)
-
-    # Set the ID of the Discord channel to send messages to
-    channel_id = 1087725231159914606
 
     # Find the channel to send messages to
     channel = client.get_channel(channel_id)
@@ -419,9 +422,10 @@ async def on_ready():
     #await channel.send(message_text)
 
     while True:
-        check_cycle(False)
-        if message_text != "":
-            await channel.send(message_text)
+        # The message that is gonna get sent to the discord
+        message = check_cycle(False)
+        if message != "":
+            await channel.send(message)
 
         check_interval = random.randint(1,3)
         print(check_interval)
