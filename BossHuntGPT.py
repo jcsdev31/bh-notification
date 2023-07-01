@@ -295,27 +295,15 @@ async def check_for_banners(filename):
                 # Break out of the loop once a banner text is detected and a message is sent
                 break
             
-            ratio = fuzz.partial_ratio(extracted_text, 'Adventurer')
-            if ratio >= 90:
+            ratio1 = fuzz.partial_ratio(extracted_text, 'Adventurer')
+            ratio2 = fuzz.partial_ratio(extracted_text, 'The item')
+            ratio3 = fuzz.partial_ratio(extracted_text, 'The next')
+            if ratio1 >= 90 or ratio2 >= 90 or ratio3 >= 90:
                 banner_close_x = random.randint(710, 720)
                 banner_close_y = random.randint(96, 110)
                 driver.tap([(banner_close_x, banner_close_y)])
                 break
             
-            ratio = fuzz.partial_ratio(extracted_text, 'The item')
-            if ratio >= 90:
-                banner_close_x = random.randint(710, 720)
-                banner_close_y = random.randint(96, 110)
-                driver.tap([(banner_close_x, banner_close_y)])
-                break
-
-            ratio = fuzz.partial_ratio(extracted_text, 'The next')
-            if ratio >= 90:
-                banner_close_x = random.randint(710, 720)
-                banner_close_y = random.randint(96, 110)
-                driver.tap([(banner_close_x, banner_close_y)])
-                break
-
 async def check_cycle(initialize):
     # Store all updates here to be sent to discord
     draft_message = ""
