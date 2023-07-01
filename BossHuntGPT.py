@@ -158,18 +158,6 @@ appeared_img = cv2.imread('lookup/appeared.png')
 
 boss_status_img = [longer_time_img, short_time_img, refreshing_soon_img, appeared_img]
 
-# Set the Discord bot token
-bot_token = ""
-
-intents = discord.Intents.default()
-
-# Create a Discord client
-client = discord.Client(intents=intents)
-
-# Set the ID of the Discord channel to send messages to
-channel_id = 1087725231159914606
-
-
 # Pre-Process Image for OCR
 def preprocess_image(image):
 
@@ -231,7 +219,7 @@ def save_image(screenshot_filename):
     screenshot_filepath = os.path.join(os.getcwd(), screenshot_filename)
     driver.save_screenshot(screenshot_filepath)
 
-def check_for_changes(boss_lookup, boss_group_filename, initialize):
+async def check_for_changes(boss_lookup, boss_group_filename, initialize):
 
     boss_group_img = cv2.imread(boss_group_filename)
     text_updates = "" # initialize an empty string to store changes
@@ -260,7 +248,7 @@ def check_for_changes(boss_lookup, boss_group_filename, initialize):
 
         if (new_boss_status != old_boss_status) and initialize == False:
             if new_boss_status == boss_status[0]:
-                text_updates += f"```diff\n- {boss_name} was killed!\n```" # add message to the string
+                await channel.send(f"```diff\n- {boss_name} was killed!\n```") # add message to the string
                 boss[boss_name] = 0
             elif new_boss_status == boss_status[1]:
                 #text_updates += f"{boss_name} will spawn within 30 minutes!\n" # add message to the string
@@ -269,7 +257,7 @@ def check_for_changes(boss_lookup, boss_group_filename, initialize):
                 #text_updates += f"{boss_name} will spawn within 15 minutes!\n" # add message to the string
                 boss[boss_name] = 2
             elif new_boss_status == boss_status[3]:
-                text_updates += f"```diff\n+ {boss_name} appeared!\n```" # add message to the string
+                await channel.send(f"```diff\n+ {boss_name} appeared!\n```") # add message to the string
                 boss[boss_name] = 3
             else:
                 break    
@@ -278,9 +266,7 @@ def check_for_changes(boss_lookup, boss_group_filename, initialize):
     return text_updates
 
 
-def check_for_banners(filename):
-    
-    new_banner_text = "" # initialize an empty string to store detected banners
+async def check_for_banners(filename):
 
     # Open the captured screenshot using the PIL module
     with Image.open(filename) as screenshot:
@@ -302,7 +288,7 @@ def check_for_banners(filename):
             ratio = fuzz.partial_ratio(extracted_text, banner_text)
             if ratio >= 85:
                 # Generate message sent to discord
-                new_banner_text += f"```\n {banner_lookup[banner_text]} will be spawning soon! Warriors, charge!\n```"
+                await channel.send(f"```\n {banner_lookup[banner_text]} will be spawning soon! Warriors, charge!\n```")
                 banner_close_x = random.randint(710, 720)
                 banner_close_y = random.randint(96, 110)
                 driver.tap([(banner_close_x, banner_close_y)])
@@ -330,9 +316,7 @@ def check_for_banners(filename):
                 driver.tap([(banner_close_x, banner_close_y)])
                 break
 
-    return new_banner_text
-
-def check_cycle(initialize):
+async def check_cycle(initialize):
     # Store all updates here to be sent to discord
     draft_message = ""
 
@@ -343,27 +327,27 @@ def check_cycle(initialize):
 
     time.sleep(0.5)
     save_image("mvp1-4.png")
-    draft_message += check_for_changes(['Lord of the Dead', 'Fallen Bishop', 'Tao Gunka', 'Lost Dragon'], 'mvp1-4.png', initialize)
-    draft_message += check_for_banners("mvp1-4.png")
+    draft_message += await check_for_changes(['Lord of the Dead', 'Fallen Bishop', 'Tao Gunka', 'Lost Dragon'], 'mvp1-4.png', initialize)
+    await check_for_banners("mvp1-4.png")
     print(draft_message, flush=True)
 
     swipeUp(185, 445, 500) # start_y, end_y, duration
     time.sleep(0.2)
     save_image("mvp5-8.png")
-    draft_message += check_for_changes(['Morroc', 'Overseer of Time', 'Doppelganger', 'Amon Ra'], 'mvp5-8.png', initialize)
+    draft_message += await check_for_changes(['Morroc', 'Overseer of Time', 'Doppelganger', 'Amon Ra'], 'mvp5-8.png', initialize)
     print(draft_message, flush=True)
 
     swipeUp(185, 400, 500)
     time.sleep(0.2)
     save_image("mvp9-12.png")
-    draft_message += check_for_changes(['Orc Lord', 'Pharaoh', 'Orc Hero', 'Maya'], 'mvp9-12.png', initialize)
-    draft_message += check_for_banners("mvp9-12.png")
+    draft_message += await check_for_changes(['Orc Lord', 'Pharaoh', 'Orc Hero', 'Maya'], 'mvp9-12.png', initialize)
+    await check_for_banners("mvp9-12.png")
     print(draft_message, flush=True)
 
     swipeUp(185, 429.3, 200)
     time.sleep(0.2)
     save_image("mvp13-16.png")
-    draft_message += check_for_changes(['Eddga', 'Kraken', 'Phreeoni', 'Mistress'], 'mvp13-16.png', initialize)
+    draft_message += await check_for_changes(['Eddga', 'Kraken', 'Phreeoni', 'Mistress'], 'mvp13-16.png', initialize)
     print(draft_message, flush=True)
 
     # Switch to Mini Tab
@@ -373,27 +357,27 @@ def check_cycle(initialize):
 
     time.sleep(0.5)
     save_image("mini1-4.png")
-    draft_message += check_for_changes(['Coelacanth', 'Naght Sieger', 'Necromancer', 'Ogretooth'], 'mini1-4.png', initialize)
-    draft_message += check_for_banners("mini1-4.png")
+    draft_message += await check_for_changes(['Coelacanth', 'Naght Sieger', 'Necromancer', 'Ogretooth'], 'mini1-4.png', initialize)
+    await check_for_banners("mini1-4.png")
     print(draft_message, flush=True)
 
     swipeUp(185, 445, 500)
     time.sleep(0.2)
     save_image("mini5-8.png")
-    draft_message += check_for_changes(['Mysteltainn', 'Chimera', 'Vagabond Wolf', 'Dark Priest'], 'mini5-8.png', initialize)
+    draft_message += await check_for_changes(['Mysteltainn', 'Chimera', 'Vagabond Wolf', 'Dark Priest'], 'mini5-8.png', initialize)
     print(draft_message, flush=True)
 
     swipeUp(185, 400, 500)
     time.sleep(0.2)
     save_image("mini9-12.png")
-    draft_message += check_for_changes(['Angeling', 'Deviling', 'King Dramoh', 'Toad'], 'mini9-12.png', initialize)
+    draft_message += await check_for_changes(['Angeling', 'Deviling', 'King Dramoh', 'Toad'], 'mini9-12.png', initialize)
     print(draft_message, flush=True)
 
     swipeUp(185, 429.3, 200)
     time.sleep(0.2)
     save_image("mini13-16.png")
-    draft_message += check_for_changes(['Ghostring', 'Mastering', 'Dragon Fly', 'Eclipse'], 'mini13-16.png', initialize)
-    draft_message += check_for_banners("mini13-16.png")
+    draft_message += await check_for_changes(['Ghostring', 'Mastering', 'Dragon Fly', 'Eclipse'], 'mini13-16.png', initialize)
+    await check_for_banners("mini13-16.png")
     print(draft_message, flush=True)
 
     # Switch back to MVP Tab
@@ -408,31 +392,37 @@ def check_cycle(initialize):
     close_button_y = random.randint(30, 58)
     driver.tap([(close_button_x, close_button_y)])
 
-    return draft_message
+
+# Set the Discord bot token
+bot_token = "MTA4ODg0ODc4MDQwMjYyMjQ5NA.GOcnJP.SytpeWKLU6dPW2BvfzALRxfRB_sFm54dM4aXV0"
+
+intents = discord.Intents.default()
+
+# Create a Discord client
+client = discord.Client(intents=intents)
+
+# Set the ID of the Discord channel to send messages to
+channel_id = 1087725231159914606
 
 # Event listener for when the bot is ready
 @client.event
 async def on_ready():
+    global channel
 
     # Find the channel to send messages to
     channel = client.get_channel(channel_id)
 
-    #await channel.send("Boss Hunt Bulagan Bot is now live...!")
-    check_cycle(True)
-    #await channel.send(message_text)
+    await check_cycle(True)
 
     while True:
-        # The message that is gonna get sent to the discord
-        message = check_cycle(False)
-        if message != "":
-            await channel.send(message)
+
+        await check_cycle(False)
 
         check_interval = random.randint(1,3)
         print(check_interval)
         # Wait for the specified interval before checking again
         await asyncio.sleep(check_interval)
     
-    #driver.quit()
     
 # Start the bot
 client.run(bot_token)
