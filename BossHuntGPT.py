@@ -113,41 +113,45 @@ boss_status = {
 }
 
 # Define a dictionary for the bosses and their status
-boss = {
-    'Storm Dragon': 0,
-    'Orc Disaster': 0,
-    'Mistress': 0,
-    'Phreeoni': 0,
-    'Kraken': 0,
-    'Eddga': 0,
-    'Maya': 0,
-    'Orc Hero': 0,
-    'Pharaoh': 0,
-    'Orc Lord': 0,
-    'Amon Ra': 0,
-    'Doppelganger': 0,
-    'Overseer of Time': 0,
-    'Morroc': 0,
-    'Lost Dragon': 0,
-    'Tao Gunka': 0,
-    'Fallen Bishop': 0,
-    'Lord of the Dead': 0,
-    'Eclipse': 0,
-    'Dragon Fly': 0,
-    'Mastering': 0,
-    'Ghostring': 0,
-    'Toad': 0,
-    'King Dramoh': 0,
-    'Deviling': 0,
-    'Angeling': 0,
-    'Dark Priest': 0,
-    'Vagabond Wolf': 0,
-    'Chimera': 0,
-    'Mysteltainn': 0,
-    'Ogretooth': 0,
-    'Necromancer': 0,
-    'Naght Sieger': 0,
-    'Coelacanth': 0,
+minis = {
+    'Orc Disaster': -1,
+    'Eclipse': -1,
+    'Dragon Fly': -1,
+    'Ghostring': -1,
+    'Mastering': -1,
+    'King Dramoh': -1,
+    'Toad': -1,
+    'Deviling': -1,
+    'Angeling': -1,
+    'Dark Priest': -1,
+    'Vagabond Wolf': -1,
+    'Chimera': -1,
+    'Mysteltainn': -1,
+    'Ogretooth': -1,
+    'Necromancer': -1,
+    'Naght Sieger': -1,
+    'Coelacanth': -1,
+}
+
+# Define a dictionary for the bosses and their status
+mvps = {
+    'Storm Dragon': -1,
+    'Phreeoni': -1,
+    'Mistress': -1,
+    'Eddga': -1,
+    'Kraken': -1,
+    'Maya': -1,
+    'Orc Hero': -1,
+    'Pharaoh': -1,
+    'Orc Lord': -1,
+    'Amon Ra': -1,
+    'Doppelganger': -1,
+    'Morroc': -1,
+    'Overseer of Time': -1,
+    'Lost Dragon': -1,
+    'Tao Gunka': -1,
+    'Lord of the Dead': -1,
+    'Fallen Bishop': -1,
 }
 
 # Load status images
@@ -155,7 +159,6 @@ longer_time_img = cv2.imread('lookup/longer-time.png')
 short_time_img = cv2.imread('lookup/short-time.png')
 refreshing_soon_img = cv2.imread('lookup/refreshing-soon.png')
 appeared_img = cv2.imread('lookup/appeared.png')
-
 boss_status_img = [longer_time_img, short_time_img, refreshing_soon_img, appeared_img]
 
 # Pre-Process Image for OCR
@@ -175,24 +178,24 @@ def preprocess_image(image):
 
     return image
 
-def check_in_image(small, big):
-    
-    # Convert the images to grayscale
-    small_gray = cv2.cvtColor(small, cv2.COLOR_BGR2GRAY)
-    big_gray = cv2.cvtColor(big, cv2.COLOR_BGR2GRAY)
+def check_in_image(boss):
 
-    # Find the small image in the big image
-    result = cv2.matchTemplate(big_gray, small_gray, cv2.TM_CCOEFF_NORMED)
+    # Convert the images to grayscale
+    boss_gray = cv2.cvtColor(boss, cv2.COLOR_BGR2GRAY)
+    current_gray = cv2.cvtColor(current_screen, cv2.COLOR_BGR2GRAY)
+
+    # Find the image in the big image
+    result = cv2.matchTemplate(current_gray, boss_gray, cv2.TM_CCOEFF_NORMED)
     min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
 
     # Check if the small image was found
-    if max_val > 0.8:
+    if max_val > 0.9:
         # Get the coordinates of the small image in the big image
         top_left = max_loc
-        bottom_right = (top_left[0] + small.shape[1] + 100, top_left[1] + small.shape[0])
+        bottom_right = (top_left[0] + boss.shape[1] + 100, top_left[1] + boss.shape[0])
 
         # Crop the area around the small image
-        cropped_image = big[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
+        cropped_image = current_screen[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
 
         # Save the cropped image to disk
         cv2.imwrite('cropped_image.png', cropped_image)
@@ -204,67 +207,73 @@ def check_in_image(small, big):
             global_min_val, status_max_val, global_min_loc, global_max_loc = cv2.minMaxLoc(status_result)
             if status_max_val > 0.8:
                 # The global image was found in the cropped image
-                return boss_status[i]
+                return i
                 
     else:
         return "Image lookup failed!"
 
-def swipeUp(start_y, end_y, duration):
+async def swipeUp(start_y, end_y, duration):
+    global counter, current_screen
+
     start_x = random.randint(155, 420)
     end_x = start_x + random.randint(1,10)
     duration = 500
     driver.swipe(start_x, start_y, end_x, end_y, duration)
 
+    await asyncio.sleep(0.5)
+
+    save_image("current-screen.png")
+    counter = counter + 1
+    current_screen = cv2.imread('current-screen.png')
+    # print(f"(button click) Count = {counter}", flush=True)
+
+    await asyncio.sleep(0.5)
+
+    if counter % 2 == 0:
+        await check_for_banners('current-screen.png')
+
 def save_image(screenshot_filename):
     screenshot_filepath = os.path.join(os.getcwd(), screenshot_filename)
     driver.save_screenshot(screenshot_filepath)
 
-async def check_for_changes(boss_lookup, boss_group_filename, initialize):
-
-    boss_group_img = cv2.imread(boss_group_filename)
-    text_updates = "" # initialize an empty string to store changes
-    
-    for boss_name in boss_lookup:
-        filename = '-'.join(boss_name.lower().split()) + ".png"
-        old_boss_status = boss_status[boss[boss_name]]
-        boss_img = cv2.imread(f"lookup/{filename}")
-        new_boss_status = check_in_image(boss_img, boss_group_img)
-
-        if initialize == True:
-            if new_boss_status == boss_status[0]:
-                boss[boss_name] = 0
-                text_updates += f"```diff\n- {boss_name} : {boss_status[0]}\n```"
-            elif new_boss_status == boss_status[1]:
-                boss[boss_name] = 1
-                text_updates += f"```diff\n- {boss_name} : {boss_status[1]}\n```"
-            elif new_boss_status == boss_status[2]:
-                boss[boss_name] = 2
-                text_updates += f"```diff\n- {boss_name} : {boss_status[2]}\n```"
-            elif new_boss_status == boss_status[3]:
-                boss[boss_name] = 3
-                text_updates += f"```diff\n+ {boss_name} : {boss_status[3]}\n```"
-            else:
-                break
-
-        if (new_boss_status != old_boss_status) and initialize == False:
-            if new_boss_status == boss_status[0]:
-                await channel.send(f"```diff\n- {boss_name} was killed!\n```") # add message to the string
-                boss[boss_name] = 0
-            elif new_boss_status == boss_status[1]:
-                #text_updates += f"{boss_name} will spawn within 30 minutes!\n" # add message to the string
-                boss[boss_name] = 1
-            elif new_boss_status == boss_status[2]:
-                #text_updates += f"{boss_name} will spawn within 15 minutes!\n" # add message to the string
-                boss[boss_name] = 2
-            elif new_boss_status == boss_status[3]:
-                await channel.send(f"```diff\n+ {boss_name} appeared!\n```") # add message to the string
-                boss[boss_name] = 3
-            else:
-                break    
-            
-    # Return the string containing all messages
-    return text_updates
-
+async def check_for_changes(boss, boss_image, status):
+    if boss in mvps:
+        if status != mvps[boss]:
+            print(f"checkforchanges {status} : {mvps[boss]}")
+            if mvps[boss] == -1:
+                mvps[boss] = status
+                print(f"{boss} = {boss_status[status]}", flush=True)
+            elif status == 0:
+                await capture_battle_results(boss, boss_image)
+                mvps[boss] = 0
+            elif status == 1:
+                mvps[boss] = 1
+                print(f"{boss} = {boss_status[status]}", flush=True)
+            elif status == 2:
+                mvps[boss] = 2
+                print(f"{boss} = {boss_status[status]}", flush=True)
+            elif status == 3:
+                await channel.send(f"```diff\n+ {boss} appeared!\n```") # add message to the string
+                mvps[boss] = 3
+                
+    elif boss in minis:
+        if status != minis[boss]:
+            print(f"checkforchanges {status} : {minis[boss]}")
+            if minis[boss] == -1:
+                minis[boss] = status
+                print(f"{boss} = {boss_status[status]}", flush=True)
+            elif status == 0:
+                await capture_battle_results(boss, boss_image)
+                minis[boss] = 0
+            elif status == 1:
+                minis[boss] = 1
+                print(f"{boss} = {boss_status[status]}", flush=True)
+            elif status == 2:
+                minis[boss] = 2
+                print(f"{boss} = {boss_status[status]}", flush=True)
+            elif status == 3:
+                await channel.send(f"```diff\n+ {boss} appeared!\n```") # add message to the string
+                minis[boss] = 3
 
 async def check_for_banners(filename):
 
@@ -278,9 +287,9 @@ async def check_for_banners(filename):
         # Extract text from the image using Tesseract 
         try:
             extracted_text = pytesseract.image_to_string(image, config="--psm 6")
-            print(extracted_text)
+            #print(extracted_text)
         except pytesseract.TesseractError as e:
-            print(f"Error: {e}")
+            #print(f"Error: {e}")
             extracted_text = ""
 
         # Check if the banner text is present in the extracted text
@@ -298,91 +307,263 @@ async def check_for_banners(filename):
             ratio1 = fuzz.partial_ratio(extracted_text, 'Adventurer')
             ratio2 = fuzz.partial_ratio(extracted_text, 'The item')
             ratio3 = fuzz.partial_ratio(extracted_text, 'The next')
-            if ratio1 >= 90 or ratio2 >= 90 or ratio3 >= 90:
+            ratio4 = fuzz.partial_ratio(extracted_text, 'Due to')
+            ratio5 = fuzz.partial_ratio(extracted_text, 'only')
+            if ratio1 >= 90 or ratio2 >= 90 or ratio3 >= 90 or ratio4 >= 90 or ratio5 >= 90:
                 banner_close_x = random.randint(710, 720)
                 banner_close_y = random.randint(96, 110)
                 driver.tap([(banner_close_x, banner_close_y)])
                 break
-            
-async def check_cycle(initialize):
-    # Store all updates here to be sent to discord
-    draft_message = ""
 
-    # Open MVP/Mini Screen
-    bh_button_x = random.randint(595, 625)
-    bh_button_y = random.randint(75, 100)
-    driver.tap([(bh_button_x, bh_button_y)])
+class Button:
+    async def find_and_tap(self, button):
 
-    time.sleep(0.5)
-    save_image("mvp1-4.png")
-    draft_message += await check_for_changes(['Lord of the Dead', 'Fallen Bishop', 'Tao Gunka', 'Lost Dragon'], 'mvp1-4.png', initialize)
-    await check_for_banners("mvp1-4.png")
-    print(draft_message, flush=True)
+        global counter, current_screen
 
-    swipeUp(185, 445, 500) # start_y, end_y, duration
-    time.sleep(0.2)
-    save_image("mvp5-8.png")
-    draft_message += await check_for_changes(['Morroc', 'Overseer of Time', 'Doppelganger', 'Amon Ra'], 'mvp5-8.png', initialize)
-    print(draft_message, flush=True)
+        # Convert the images to grayscale
+        button_gray = cv2.cvtColor(button, cv2.COLOR_BGR2GRAY)
+        current_gray = cv2.cvtColor(current_screen, cv2.COLOR_BGR2GRAY)
 
-    swipeUp(185, 400, 500)
-    time.sleep(0.2)
-    save_image("mvp9-12.png")
-    draft_message += await check_for_changes(['Orc Lord', 'Pharaoh', 'Orc Hero', 'Maya'], 'mvp9-12.png', initialize)
-    await check_for_banners("mvp9-12.png")
-    print(draft_message, flush=True)
+        # Find the button in the big image
+        result = cv2.matchTemplate(current_gray, button_gray, cv2.TM_CCOEFF_NORMED)
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
 
-    swipeUp(185, 429.3, 200)
-    time.sleep(0.2)
-    save_image("mvp13-16.png")
-    draft_message += await check_for_changes(['Eddga', 'Kraken', 'Phreeoni', 'Mistress'], 'mvp13-16.png', initialize)
-    print(draft_message, flush=True)
+        # Check if the button was found
+        if max_val > 0.8:
+            # Get the coordinates of the button in the big image
+            top_left = max_loc
+            bottom_right = (top_left[0] + button.shape[1], top_left[1] + button.shape[0])
 
-    # Switch to Mini Tab
-    mini_button_x = random.randint(205, 275)
-    mini_button_y = random.randint(85, 108)
-    driver.tap([(mini_button_x, mini_button_y)])
+            # Tap the button
+            x = random.randint(top_left[0], bottom_right[0])
+            y = random.randint(top_left[1], bottom_right[1])
+            driver.tap([(x, y)])
+            await asyncio.sleep(0.5)
+        else:
+            print(f"button is not found in the image")
 
-    time.sleep(0.5)
-    save_image("mini1-4.png")
-    draft_message += await check_for_changes(['Coelacanth', 'Naght Sieger', 'Necromancer', 'Ogretooth'], 'mini1-4.png', initialize)
-    await check_for_banners("mini1-4.png")
-    print(draft_message, flush=True)
 
-    swipeUp(185, 445, 500)
-    time.sleep(0.2)
-    save_image("mini5-8.png")
-    draft_message += await check_for_changes(['Mysteltainn', 'Chimera', 'Vagabond Wolf', 'Dark Priest'], 'mini5-8.png', initialize)
-    print(draft_message, flush=True)
+        save_image("current-screen.png")
+        counter = counter + 1
+        current_screen = cv2.imread('current-screen.png')
+        await asyncio.sleep(0.5)
+        # print(f"(button click) Count = {counter}", flush=True)
 
-    swipeUp(185, 400, 500)
-    time.sleep(0.2)
-    save_image("mini9-12.png")
-    draft_message += await check_for_changes(['Angeling', 'Deviling', 'King Dramoh', 'Toad'], 'mini9-12.png', initialize)
-    print(draft_message, flush=True)
+        if counter % 2 == 0:
+            await check_for_banners('current-screen.png')
 
-    swipeUp(185, 429.3, 200)
-    time.sleep(0.2)
-    save_image("mini13-16.png")
-    draft_message += await check_for_changes(['Ghostring', 'Mastering', 'Dragon Fly', 'Eclipse'], 'mini13-16.png', initialize)
-    await check_for_banners("mini13-16.png")
-    print(draft_message, flush=True)
+    async def banner_close(self):
+        button = cv2.imread('images/buttons/banner-close-button.png')
+        await self.find_and_tap(button)
 
-    # Switch back to MVP Tab
-    mvp_button_x = random.randint(108, 180)
-    mvp_button_y = random.randint(86, 110)
-    driver.tap([(mvp_button_x, mvp_button_y)])
+    async def battle_screen(self):
+        button = cv2.imread('images/buttons/battle-screen-button.png')
+        await self.find_and_tap(button)
+    
+    async def close(self):
+        button = cv2.imread('images/buttons/close-button.png')
+        await self.find_and_tap(button)
+    
+    async def mini_tab(self):
+        button = cv2.imread('images/buttons/mini-tab-button.png')
+        await self.find_and_tap(button)
 
-    time.sleep(0.5)
+    async def mvp_screen(self):
+        button = cv2.imread('images/buttons/mvp-screen-button.png')
+        await self.find_and_tap(button)
+    
+    async def mvp_tab(self):
+        button = cv2.imread('images/buttons/mvp-tab-button.png')
+        await self.find_and_tap(button)
 
-    # Close the MVP/Mini Screen
-    close_button_x = random.randint(860, 890)
-    close_button_y = random.randint(30, 58)
-    driver.tap([(close_button_x, close_button_y)])
+    async def unhide_icons(self):
+        button = cv2.imread('images/buttons/unhide-icons-button.png')
+        await self.find_and_tap(button)
+
+    async def close_battle_results(self):
+        button = cv2.imread('images/screens/mvp-screen.png')
+        await self.find_and_tap(button)
+
+# Create an instance of the ExampleClass
+tap = Button()
+
+# Return True or False whether the "location" variable is in the current screen
+def is_in(location):
+
+    screen = cv2.imread(f"images/{location}.png")
+
+    # Convert the images to grayscale
+    screen_gray = cv2.cvtColor(screen, cv2.COLOR_BGR2GRAY)
+    current_gray = cv2.cvtColor(current_screen, cv2.COLOR_BGR2GRAY)
+
+    # Find the image in the big image
+    result = cv2.matchTemplate(current_gray, screen_gray, cv2.TM_CCOEFF_NORMED)
+    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+
+    # Check if the image was found
+    if max_val > 0.8:
+        return True
+    else:
+        return False
+    
+# Return True or False whether the "boss_name" variable is in the current screen
+def locate_boss(boss_name):
+
+    filename = '-'.join(boss_name.lower().split()) + ".png"
+    screen = cv2.imread(f"images/boss-sidebar/{filename}")
+
+    # Convert the images to grayscale
+    screen_gray = cv2.cvtColor(screen, cv2.COLOR_BGR2GRAY)
+    current_gray = cv2.cvtColor(current_screen, cv2.COLOR_BGR2GRAY)
+
+    # Find the image in the big image
+    result = cv2.matchTemplate(current_gray, screen_gray, cv2.TM_CCOEFF_NORMED)
+    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+
+    # Check if the image was found
+    if max_val > 0.9:
+        return True
+    else:
+        return False
+
+async def go_to_mvp_tab():
+    while not is_in('screens/mvp-tab-screen'):
+        while not is_in('screens/mvp-screen'):
+            while not is_in('screens/mvp-button-screen'):
+                if not is_in('screens/mvp-screen'):
+                    await tap.unhide_icons()
+                    # time.sleep(0.5)
+                else: 
+                    break
+            await tap.mvp_screen()
+            # time.sleep(0.5)
+        await tap.mvp_tab()
+        # time.sleep(0.5)
+
+async def go_to_mini_tab():
+    while not is_in('screens/mini-tab-screen'):
+        while not is_in('screens/mvp-screen'):
+            while not is_in('screens/mvp-button-screen'):
+                if not is_in('screens/mvp-screen'):
+                    await tap.unhide_icons()
+                    # time.sleep(0.5)
+                else: 
+                    break
+            await tap.mvp_screen()
+            # time.sleep(0.5)
+        await tap.mini_tab()
+        # time.sleep(0.5)
+
+async def capture_battle_results(boss, boss_image):
+    global counter
+
+    filename = '-'.join(boss.lower().split())
+
+    while True:
+        if not is_in(f'boss-image/{filename}-wallpaper'):
+            await tap.find_and_tap(boss_image)
+        else:
+            break
+    
+    while True:
+        if is_in(f'screens/mvp-tab-screen') or is_in(f'screens/mini-tab-screen'):
+            await tap.battle_screen()
+        else:
+            break
+    
+  
+    await asyncio.sleep(1)
+
+    save_image("battle-results.png")
+    # Crop the image
+    battle_results = cv2.imread('battle-results.png')
+    cropped_image = battle_results[130:410, 80:890]
+    downscaled_image = cv2.resize(cropped_image, (700, 242), interpolation=cv2.INTER_AREA)
+    cv2.imwrite('battle-results.png', downscaled_image)
+    counter = counter + 1
+    # print(f"(button click) Count = {counter}", flush=True)
+
+    with open('battle-results.png', "rb") as image_file:
+        await channel.send(f"```diff\n- {boss} has been slain!\n```", file=discord.File(image_file))
+
+    while is_in('screens/battle-result-screen'):
+        await tap.close_battle_results()
+
+async def close_mvp_screen():
+    while True:
+        if is_in('screens/mvp-screen'):
+            await tap.close()
+        else:
+            break
+
+async def reset_bosses(anchor_boss):
+    if locate_boss(anchor_boss):
+        return
+    else:
+        while not locate_boss(anchor_boss):
+            await swipeUp(150, 450, 100)
+
+        filename = '-'.join(anchor_boss.lower().split()) + ".png"
+        boss_image = cv2.imread(f"images/boss-sidebar/{filename}")
+        await tap.find_and_tap(boss_image)
+
+async def scan_mvps():
+    global current_item
+    if current_item in mvps:
+        for i, boss in enumerate(mvps):
+            if boss == current_item:
+                while True:
+                    if locate_boss(boss):
+                        filename = '-'.join(boss.lower().split()) + ".png"
+                        boss_image = cv2.imread(f"images/boss-sidebar/{filename}")
+                        status = check_in_image(boss_image)
+                        await check_for_changes(boss, boss_image, status)
+                        break
+                    else:
+                        while not locate_boss(boss):
+                            y = random.randint(235, 435)
+                            await swipeUp(y, y - 150, 100)
+                            # time.sleep(0.5)
+
+                # Check if it's the last item
+                if i == len(mvps) - 1:
+                    # Handle the last item
+                    current_item = TOP_MINI
+                else:
+                    # Get the next item
+                    current_item = list(mvps.keys())[i + 1]
+
+
+async def scan_minis():
+    global current_item
+    if current_item in minis:
+        for i, boss in enumerate(minis):
+            if boss == current_item:
+                while True:
+                    if locate_boss(boss):
+                        filename = '-'.join(boss.lower().split()) + ".png"
+                        boss_image = cv2.imread(f"images/boss-sidebar/{filename}")
+                        status = check_in_image(boss_image)
+                        await check_for_changes(boss, boss_image, status)
+                        break
+                    else:
+                        while not locate_boss(boss):
+                            y = random.randint(235, 435)
+                            await swipeUp(y, y - 150, 100)
+                            # time.sleep(0.5)
+
+                # Check if it's the last item
+                if i == len(minis) - 1:
+                    # Handle the last item
+                    current_item = TOP_MVP
+                else:
+                    # Get the next item
+                    current_item = list(minis.keys())[i + 1]
+
 
 
 # Set the Discord bot token
-bot_token = "MTA4ODg0ODc4MDQwMjYyMjQ5NA.GOcnJP.SytpeWKLU6dPW2BvfzALRxfRB_sFm54dM4aXV0"
+bot_token = ""
 
 intents = discord.Intents.default()
 
@@ -395,23 +576,36 @@ channel_id = 1087725231159914606
 # Event listener for when the bot is ready
 @client.event
 async def on_ready():
-    global channel
+    global channel, counter, current_screen, current_item, TOP_MVP, TOP_MINI
 
     # Find the channel to send messages to
     channel = client.get_channel(channel_id)
 
-    await check_cycle(True)
+    TOP_MVP = "Storm Dragon"
+    TOP_MINI = "Orc Disaster"
 
+    current_item = TOP_MVP
+    
+    counter = 0
+    save_image("current-screen.png")
+    counter = counter + 1
+    print(f"(initial) Count = {counter}", flush=True)
+
+    current_screen = cv2.imread('current-screen.png')
+    
     while True:
+        await cycle()
 
-        await check_cycle(False)
+async def cycle():
+    await go_to_mvp_tab()
+    await reset_bosses(TOP_MVP)
+    await scan_mvps()
+    await close_mvp_screen()
+    await go_to_mini_tab()
+    await reset_bosses(TOP_MINI)
+    await scan_minis()
+    await close_mvp_screen()
 
-        check_interval = random.randint(1,3)
-        print(check_interval)
-        # Wait for the specified interval before checking again
-        await asyncio.sleep(check_interval)
-    
-    
 # Start the bot
 client.run(bot_token)
 
