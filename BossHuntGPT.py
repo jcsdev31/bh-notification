@@ -155,10 +155,10 @@ mvps = {
 }
 
 # Load status images
-longer_time_img = cv2.imread('lookup/longer-time.png')
-short_time_img = cv2.imread('lookup/short-time.png')
-refreshing_soon_img = cv2.imread('lookup/refreshing-soon.png')
-appeared_img = cv2.imread('lookup/appeared.png')
+longer_time_img = cv2.imread('images/boss-status/longer-time.png')
+short_time_img = cv2.imread('images/boss-status/short-time.png')
+refreshing_soon_img = cv2.imread('images/boss-status/refreshing-soon.png')
+appeared_img = cv2.imread('images/boss-status/appeared.png')
 boss_status_img = [longer_time_img, short_time_img, refreshing_soon_img, appeared_img]
 
 # Pre-Process Image for OCR
@@ -563,7 +563,7 @@ async def scan_minis():
 
 
 # Set the Discord bot token
-bot_token = ""
+BOT_TOKEN = ""
 
 intents = discord.Intents.default()
 
@@ -607,5 +607,5 @@ async def cycle():
     await close_mvp_screen()
 
 # Start the bot
-client.run(bot_token)
+client.run(BOT_TOKEN)
 
