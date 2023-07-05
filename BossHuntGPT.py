@@ -561,10 +561,6 @@ async def scan_minis():
                     current_item = list(minis.keys())[i + 1]
 
 
-
-# Set the Discord bot token
-BOT_TOKEN = ""
-
 intents = discord.Intents.default()
 
 # Create a Discord client
