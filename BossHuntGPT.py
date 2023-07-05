@@ -10,6 +10,7 @@ import datetime
 from PIL import Image, ImageOps, ImageFilter
 import pytesseract
 from fuzzywuzzy import fuzz
+import config
 
 def establish_appium_connection():
     # Set the driver settings for Appium Connection
@@ -603,5 +604,5 @@ async def cycle():
     await close_mvp_screen()
 
 # Start the bot
-client.run(BOT_TOKEN)
+client.run(config.BOT_TOKEN)
 
