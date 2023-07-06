@@ -254,7 +254,7 @@ async def check_for_changes(boss, boss_image, status):
                 mvps[boss] = 2
                 print(f"{boss} = {boss_status[status]}", flush=True)
             elif status == 3:
-                await channel.send(f"```diff\n+ {boss} appeared!\n```") # add message to the string
+                await channel_boss_occurence.send(f"```diff\n+ {boss} appeared!\n```") # add message to the string
                 mvps[boss] = 3
                 
     elif boss in minis:
@@ -273,7 +273,7 @@ async def check_for_changes(boss, boss_image, status):
                 minis[boss] = 2
                 print(f"{boss} = {boss_status[status]}", flush=True)
             elif status == 3:
-                await channel.send(f"```diff\n+ {boss} appeared!\n```") # add message to the string
+                await channel_boss_occurence.send(f"```diff\n+ {boss} appeared!\n```") # add message to the string
                 minis[boss] = 3
 
 async def check_for_banners(filename):
@@ -298,7 +298,7 @@ async def check_for_banners(filename):
             ratio = fuzz.partial_ratio(extracted_text, banner_text)
             if ratio >= 85:
                 # Generate message sent to discord
-                await channel.send(f"```\n {banner_lookup[banner_text]} will be spawning soon! Warriors, charge!\n```")
+                await channel_banners.send(f"```\n {banner_lookup[banner_text]} will be spawning soon! Warriors, charge!\n```")
                 banner_close_x = random.randint(710, 720)
                 banner_close_y = random.randint(96, 110)
                 driver.tap([(banner_close_x, banner_close_y)])
@@ -502,7 +502,7 @@ async def capture_battle_results(boss, boss_image):
     # print(f"(button click) Count = {counter}", flush=True)
 
     with open('battle-results.png', "rb") as image_file:
-        await channel.send(f"```diff\n- {boss} has been slain!\n```", file=discord.File(image_file))
+        await channel_boss_deaths.send(f"```diff\n- {boss} has been slain!\n```", file=discord.File(image_file))
 
     while is_in('screens/battle-result-screen'):
         await tap.close_battle_results()
@@ -606,15 +606,19 @@ intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 
 # Set the ID of the Discord channel to send messages to
-channel_id = 1087725231159914606
+channel_banners_id = 1087725231159914606
+channel_boss_occurence_id = 1126518099454201866
+channel_boss_deaths_id = 1126518142500352010
 
 # Event listener for when the bot is ready
 @client.event
 async def on_ready():
-    global channel, counter, current_screen, current_boss, current_boss_type, TOP_MVP, TOP_MINI
+    global channel_banners, channel_boss_occurence, channel_boss_deaths, counter, current_screen, current_boss, current_boss_type, TOP_MVP, TOP_MINI
 
     # Find the channel to send messages to
-    channel = client.get_channel(channel_id)
+    channel_banners = client.get_channel(channel_banners_id)
+    channel_boss_occurence = client.get_channel(channel_boss_occurence_id)
+    channel_boss_deaths = client.get_channel(channel_boss_deaths_id)
 
     TOP_MVP = "Storm Dragon"
     TOP_MINI = "Orc Disaster"
