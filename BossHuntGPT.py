@@ -457,7 +457,7 @@ async def go_to_mini_tab():
 
     if is_in('screens/map-screen'):
             await tap.close_map()
-            
+
     while not is_in('screens/mini-tab-screen'):
         while not is_in('screens/mvp-screen'):
             while not is_in('screens/mvp-button-screen'):
@@ -513,11 +513,16 @@ async def close_mvp_screen():
         else:
             break
 
-async def reset_bosses(anchor_boss):
+async def reset_bosses(anchor_boss, boss_type):
     if locate_boss(anchor_boss):
         return
     else:
         while not locate_boss(anchor_boss):
+            if is_in('buttons/unhide-icons-button'):
+                if boss_type == 'MVP':
+                    await go_to_mvp_tab()
+                elif boss_type == 'MINI':
+                    await go_to_mini_tab()
             y = random.randint(150, 200)
             await swipeUp(y, y + 300, 100)
 
@@ -613,12 +618,12 @@ async def on_ready():
         await cycle()
 
 async def cycle():
-    await go_to_mvp_tab()
-    await reset_bosses(TOP_MVP)
+    await go_to_mvp_tab() #
+    await reset_bosses(TOP_MVP, "MVP")
     await scan_mvps()
     await close_mvp_screen()
     await go_to_mini_tab()
-    await reset_bosses(TOP_MINI)
+    await reset_bosses(TOP_MINI, "MINI")
     await scan_minis()
     await close_mvp_screen()
 
