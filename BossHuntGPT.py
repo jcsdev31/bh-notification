@@ -384,6 +384,10 @@ class Button:
     async def close_battle_results(self):
         button = cv2.imread('images/screens/mvp-screen.png')
         await self.find_and_tap(button, "mvp-screen")
+    
+    async def close_map(self):
+        button = cv2.imread('images/buttons/map-close-button.png')
+        await self.find_and_tap(button, "map-close-button")
 
 # Create an instance of the ExampleClass
 tap = Button()
@@ -430,6 +434,10 @@ def locate_boss(boss_name):
 async def go_to_mvp_tab():
     if is_in('screens/battle-result-screen'):
         await tap.close_battle_results()
+
+    if is_in('screens/map-screen'):
+            await tap.close_map()
+
     while not is_in('screens/mvp-tab-screen'):
         while not is_in('screens/mvp-screen'):
             while not is_in('screens/mvp-button-screen'):
@@ -446,6 +454,10 @@ async def go_to_mvp_tab():
 async def go_to_mini_tab():
     if is_in('screens/battle-result-screen'):
         await tap.close_battle_results()
+
+    if is_in('screens/map-screen'):
+            await tap.close_map()
+            
     while not is_in('screens/mini-tab-screen'):
         while not is_in('screens/mvp-screen'):
             while not is_in('screens/mvp-button-screen'):
