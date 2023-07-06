@@ -317,7 +317,7 @@ async def check_for_banners(filename):
                 break
 
 class Button:
-    async def find_and_tap(self, button):
+    async def find_and_tap(self, button, button_name):
 
         global counter, current_screen
 
@@ -341,7 +341,7 @@ class Button:
             driver.tap([(x, y)])
             await asyncio.sleep(0.5)
         else:
-            print(f"button is not found in the image")
+            print(f"{button_name} is not found in the image")
 
 
         save_image("current-screen.png")
@@ -355,35 +355,35 @@ class Button:
 
     async def banner_close(self):
         button = cv2.imread('images/buttons/banner-close-button.png')
-        await self.find_and_tap(button)
+        await self.find_and_tap(button, "banner-close-button")
 
     async def battle_screen(self):
         button = cv2.imread('images/buttons/battle-screen-button.png')
-        await self.find_and_tap(button)
+        await self.find_and_tap(button, "battle-screen-button")
     
     async def close(self):
         button = cv2.imread('images/buttons/close-button.png')
-        await self.find_and_tap(button)
+        await self.find_and_tap(button, "close-button")
     
     async def mini_tab(self):
         button = cv2.imread('images/buttons/mini-tab-button.png')
-        await self.find_and_tap(button)
+        await self.find_and_tap(button, "mini-tab-button")
 
     async def mvp_screen(self):
         button = cv2.imread('images/buttons/mvp-screen-button.png')
-        await self.find_and_tap(button)
+        await self.find_and_tap(button, "mvp-screen-button")
     
     async def mvp_tab(self):
         button = cv2.imread('images/buttons/mvp-tab-button.png')
-        await self.find_and_tap(button)
+        await self.find_and_tap(button, "mvp-tab-button")
 
     async def unhide_icons(self):
         button = cv2.imread('images/buttons/unhide-icons-button.png')
-        await self.find_and_tap(button)
+        await self.find_and_tap(button, "unhide-icons-button")
 
     async def close_battle_results(self):
         button = cv2.imread('images/screens/mvp-screen.png')
-        await self.find_and_tap(button)
+        await self.find_and_tap(button, "mvp-screen")
 
 # Create an instance of the ExampleClass
 tap = Button()
@@ -428,6 +428,8 @@ def locate_boss(boss_name):
         return False
 
 async def go_to_mvp_tab():
+    if is_in('screens/battle-result-screen'):
+        await tap.close_battle_results()
     while not is_in('screens/mvp-tab-screen'):
         while not is_in('screens/mvp-screen'):
             while not is_in('screens/mvp-button-screen'):
@@ -442,6 +444,8 @@ async def go_to_mvp_tab():
         # time.sleep(0.5)
 
 async def go_to_mini_tab():
+    if is_in('screens/battle-result-screen'):
+        await tap.close_battle_results()
     while not is_in('screens/mini-tab-screen'):
         while not is_in('screens/mvp-screen'):
             while not is_in('screens/mvp-button-screen'):
@@ -462,7 +466,7 @@ async def capture_battle_results(boss, boss_image):
 
     while True:
         if not is_in(f'boss-image/{filename}-wallpaper'):
-            await tap.find_and_tap(boss_image)
+            await tap.find_and_tap(boss_image, "boss image inside mvp screen")
         else:
             break
     
@@ -502,11 +506,12 @@ async def reset_bosses(anchor_boss):
         return
     else:
         while not locate_boss(anchor_boss):
-            await swipeUp(150, 450, 100)
+            y = random.randint(150, 200)
+            await swipeUp(y, y + 300, 100)
 
         filename = '-'.join(anchor_boss.lower().split()) + ".png"
         boss_image = cv2.imread(f"images/boss-sidebar/{filename}")
-        await tap.find_and_tap(boss_image)
+        await tap.find_and_tap(boss_image, "boss-sidebar-image")
 
 async def scan_mvps():
     global current_item
@@ -522,9 +527,11 @@ async def scan_mvps():
                         break
                     else:
                         while not locate_boss(boss):
+                            if is_in('screens/battle-result-screen'):
+                                await tap.close_battle_results()
                             y = random.randint(235, 435)
                             await swipeUp(y, y - 150, 100)
-                            # time.sleep(0.5)
+
 
                 # Check if it's the last item
                 if i == len(mvps) - 1:
