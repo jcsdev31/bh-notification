@@ -310,7 +310,8 @@ async def check_for_banners(filename):
             ratio3 = fuzz.partial_ratio(extracted_text, 'The next')
             ratio4 = fuzz.partial_ratio(extracted_text, 'Due to')
             ratio5 = fuzz.partial_ratio(extracted_text, 'only')
-            if ratio1 >= 90 or ratio2 >= 90 or ratio3 >= 90 or ratio4 >= 90 or ratio5 >= 90:
+            ratio6 = fuzz.partial_ratio(extracted_text, 'has been')
+            if ratio1 >= 90 or ratio2 >= 90 or ratio3 >= 90 or ratio4 >= 90 or ratio5 >= 90 or ratio6 >= 90:
                 banner_close_x = random.randint(710, 720)
                 banner_close_y = random.randint(96, 110)
                 driver.tap([(banner_close_x, banner_close_y)])
@@ -478,12 +479,12 @@ async def capture_battle_results(boss, boss_image):
 
     while True:
         if not is_in(f'boss-image/{filename}-wallpaper'):
-            await tap.find_and_tap(boss_image, "boss image inside mvp screen")
+            await tap.find_and_tap(boss_image, "boss-sidebar-image")
         else:
             break
     
     while True:
-        if is_in(f'screens/mvp-tab-screen') or is_in(f'screens/mini-tab-screen'):
+        if is_in(f'buttons/mvp-tab-button') or is_in(f'buttons/mini-tab-button') or is_in(f'screens/mvp-tab-screen') or is_in(f'screens/mini-tab-screen'):
             await tap.battle_screen()
         else:
             break
@@ -513,28 +514,39 @@ async def close_mvp_screen():
         else:
             break
 
-async def reset_bosses(anchor_boss, boss_type):
+async def check_game_restarted():
+    if is_in('buttons/unhide-icons-button'):
+        if current_boss_type == 'MVP':
+            await go_to_mvp_tab()
+        elif current_boss_type == 'MINI':
+            await go_to_mini_tab()
+        return True
+    return False
+
+async def reset_bosses(anchor_boss):
     if locate_boss(anchor_boss):
         return
     else:
         while not locate_boss(anchor_boss):
-            if is_in('buttons/unhide-icons-button'):
-                if boss_type == 'MVP':
-                    await go_to_mvp_tab()
-                elif boss_type == 'MINI':
-                    await go_to_mini_tab()
+            await check_game_restarted()
             y = random.randint(150, 200)
             await swipeUp(y, y + 300, 100)
 
-        filename = '-'.join(anchor_boss.lower().split()) + ".png"
-        boss_image = cv2.imread(f"images/boss-sidebar/{filename}")
-        await tap.find_and_tap(boss_image, "boss-sidebar-image")
+        filename = '-'.join(anchor_boss.lower().split())
+        boss_image = cv2.imread(f"images/boss-sidebar/{filename}.png")
+        while True:
+            if await check_game_restarted():
+                await reset_bosses(anchor_boss)
+            if not is_in(f'boss-image/{filename}-wallpaper'):
+                await tap.find_and_tap(boss_image, "boss-sidebar-image")
+            else:
+                break
 
 async def scan_mvps():
-    global current_item
-    if current_item in mvps:
+    global current_boss, current_boss_type
+    if current_boss in mvps:
         for i, boss in enumerate(mvps):
-            if boss == current_item:
+            if boss == current_boss:
                 while True:
                     if locate_boss(boss):
                         filename = '-'.join(boss.lower().split()) + ".png"
@@ -553,17 +565,18 @@ async def scan_mvps():
                 # Check if it's the last item
                 if i == len(mvps) - 1:
                     # Handle the last item
-                    current_item = TOP_MINI
+                    current_boss = TOP_MINI
+                    current_boss_type = 'MINI'
                 else:
                     # Get the next item
-                    current_item = list(mvps.keys())[i + 1]
+                    current_boss = list(mvps.keys())[i + 1]
 
 
 async def scan_minis():
-    global current_item
-    if current_item in minis:
+    global current_boss, current_boss_type
+    if current_boss in minis:
         for i, boss in enumerate(minis):
-            if boss == current_item:
+            if boss == current_boss:
                 while True:
                     if locate_boss(boss):
                         filename = '-'.join(boss.lower().split()) + ".png"
@@ -580,10 +593,11 @@ async def scan_minis():
                 # Check if it's the last item
                 if i == len(minis) - 1:
                     # Handle the last item
-                    current_item = TOP_MVP
+                    current_boss = TOP_MVP
+                    current_boss_type = 'MVP'
                 else:
                     # Get the next item
-                    current_item = list(minis.keys())[i + 1]
+                    current_boss = list(minis.keys())[i + 1]
 
 
 intents = discord.Intents.default()
@@ -597,7 +611,7 @@ channel_id = 1087725231159914606
 # Event listener for when the bot is ready
 @client.event
 async def on_ready():
-    global channel, counter, current_screen, current_item, TOP_MVP, TOP_MINI
+    global channel, counter, current_screen, current_boss, current_boss_type, TOP_MVP, TOP_MINI
 
     # Find the channel to send messages to
     channel = client.get_channel(channel_id)
@@ -605,7 +619,8 @@ async def on_ready():
     TOP_MVP = "Storm Dragon"
     TOP_MINI = "Orc Disaster"
 
-    current_item = TOP_MVP
+    current_boss = TOP_MVP
+    current_boss_type = 'MVP'
     
     counter = 0
     save_image("current-screen.png")
@@ -619,13 +634,13 @@ async def on_ready():
 
 async def cycle():
     await go_to_mvp_tab() #
-    await reset_bosses(TOP_MVP, "MVP")
+    await reset_bosses(TOP_MVP) #
     await scan_mvps()
     await close_mvp_screen()
-    await go_to_mini_tab()
-    await reset_bosses(TOP_MINI, "MINI")
+    await go_to_mini_tab() #
+    await reset_bosses(TOP_MINI) #
     await scan_minis()
-    await close_mvp_screen()
+    await close_mvp_screen() #
 
 # Start the bot
 client.run(config.BOT_TOKEN)
