@@ -568,12 +568,19 @@ async def scan_mvps():
                         await check_for_changes(boss, boss_image, status)
                         break
                     else:
+                        swipe_count = 0
                         while not locate_boss(boss):
                             await check_game_restarted()
                             if is_in('screens/battle-result-screen'):
                                 await tap.close_battle_results()
                             y = random.randint(235, 435)
                             await swipeUp(y, y - 150, 100)
+                            swipe_count = swipe_count + 1
+                            if swipe_count == 10:
+                                if is_in('screens/battle-result-screen'):
+                                    await tap.close_battle_results()
+                                await close_mvp_screen()
+                                await go_to_mvp_tab()
 
 
                 # Check if it's the last item
@@ -599,12 +606,19 @@ async def scan_minis():
                         await check_for_changes(boss, boss_image, status)
                         break
                     else:
+                        swipe_count = 0
                         while not locate_boss(boss):
                             await check_game_restarted()
                             if is_in('screens/battle-result-screen'):
                                 await tap.close_battle_results()
                             y = random.randint(235, 435)
                             await swipeUp(y, y - 150, 100)
+                            swipe_count = swipe_count + 1
+                            if swipe_count == 10:
+                                if is_in('screens/battle-result-screen'):
+                                    await tap.close_battle_results()
+                                await close_mvp_screen()
+                                await go_to_mini_tab()
                             # time.sleep(0.5)
 
                 # Check if it's the last item
