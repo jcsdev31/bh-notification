@@ -6,7 +6,7 @@ import random
 import discord
 from discord import Intents
 import asyncio
-import datetime
+from datetime import datetime
 from PIL import Image, ImageOps, ImageFilter
 import pytesseract
 from fuzzywuzzy import fuzz
@@ -254,7 +254,8 @@ async def check_for_changes(boss, boss_image, status):
                 mvps[boss] = 2
                 print(f"{boss} = {boss_status[status]}", flush=True)
             elif status == 3:
-                await channel_boss_occurence.send(f"```diff\n+ {boss} appeared!\n```") # add message to the string
+                timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
+                await channel_boss_occurence.send(f"**{boss}** - ***Appeared*** *{timestamp}*")
                 mvps[boss] = 3
                 
     elif boss in minis:
@@ -273,7 +274,8 @@ async def check_for_changes(boss, boss_image, status):
                 minis[boss] = 2
                 print(f"{boss} = {boss_status[status]}", flush=True)
             elif status == 3:
-                await channel_boss_occurence.send(f"```diff\n+ {boss} appeared!\n```") # add message to the string
+                timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
+                await channel_boss_occurence.send(f"**{boss}** - ***Appeared*** *{timestamp}*")
                 minis[boss] = 3
 
 async def check_for_banners(filename):
@@ -298,7 +300,9 @@ async def check_for_banners(filename):
             ratio = fuzz.partial_ratio(extracted_text, banner_text)
             if ratio >= 85:
                 # Generate message sent to discord
-                await channel_banners.send(f"```\n {banner_lookup[banner_text]} will be spawning soon! Warriors, charge!\n```")
+                timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
+                await channel_banners.send(f"**{banner_lookup[banner_text]}** ***will be spawning soon! Warriors, charge!*** *{timestamp}*")
+                
                 banner_close_x = random.randint(710, 720)
                 banner_close_y = random.randint(96, 110)
                 driver.tap([(banner_close_x, banner_close_y)])
@@ -478,12 +482,22 @@ async def capture_battle_results(boss, boss_image):
     filename = '-'.join(boss.lower().split())
 
     while True:
+        if await check_game_restarted():
+            while True:
+                if not locate_boss(boss):
+                    await check_game_restarted()
+
+                    y = random.randint(235, 435)
+                    await swipeUp(y, y - 150, 100)
+                    # time.sleep(0.5)
+
         if not is_in(f'boss-image/{filename}-wallpaper'):
             await tap.find_and_tap(boss_image, "boss-sidebar-image")
         else:
             break
     
     while True:
+        await check_game_restarted()
         if is_in(f'buttons/mvp-tab-button') or is_in(f'buttons/mini-tab-button') or is_in(f'screens/mvp-tab-screen') or is_in(f'screens/mini-tab-screen'):
             await tap.battle_screen()
         else:
@@ -499,10 +513,10 @@ async def capture_battle_results(boss, boss_image):
     downscaled_image = cv2.resize(cropped_image, (700, 242), interpolation=cv2.INTER_AREA)
     cv2.imwrite('battle-results.png', downscaled_image)
     counter = counter + 1
-    # print(f"(button click) Count = {counter}", flush=True)
 
     with open('battle-results.png', "rb") as image_file:
-        await channel_boss_deaths.send(f"```diff\n- {boss} has been slain!\n```", file=discord.File(image_file))
+        timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
+        await channel_boss_deaths.send(f"**{boss}** ***was slain!*** *{timestamp}*", file=discord.File(image_file))
 
     while is_in('screens/battle-result-screen'):
         await tap.close_battle_results()
@@ -556,6 +570,7 @@ async def scan_mvps():
                         break
                     else:
                         while not locate_boss(boss):
+                            await check_game_restarted()
                             if is_in('screens/battle-result-screen'):
                                 await tap.close_battle_results()
                             y = random.randint(235, 435)
@@ -586,6 +601,9 @@ async def scan_minis():
                         break
                     else:
                         while not locate_boss(boss):
+                            await check_game_restarted()
+                            if is_in('screens/battle-result-screen'):
+                                await tap.close_battle_results()
                             y = random.randint(235, 435)
                             await swipeUp(y, y - 150, 100)
                             # time.sleep(0.5)
