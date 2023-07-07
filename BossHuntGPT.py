@@ -219,7 +219,10 @@ async def swipeUp(start_y, end_y, duration):
     start_x = random.randint(155, 420)
     end_x = start_x + random.randint(1,10)
     duration = 500
-    driver.swipe(start_x, start_y, end_x, end_y, duration)
+    try:
+        driver.swipe(start_x, start_y, end_x, end_y, duration)
+    except Exception as e:
+        print("wiwoweeee button tap interrupted weewoo", flush=True)
 
     await asyncio.sleep(0.5)
 
@@ -254,7 +257,10 @@ async def check_for_changes(boss, boss_image, status):
                 print(f"{boss} = {boss_status[status]}", flush=True)
             elif status == 3:
                 timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
-                await channel_boss_occurence.send(f"**{boss}** - ***Appeared*** *{timestamp}*")
+                try:
+                    await channel_boss_occurence.send(f"**{boss}** - ***Appeared*** *{timestamp}*")
+                except Exception as e:
+                    print("wew i failed connecting to discord to send appeared", flush=True)
                 mvps[boss] = 3
                 
     elif boss in minis:
@@ -274,7 +280,10 @@ async def check_for_changes(boss, boss_image, status):
                 print(f"{boss} = {boss_status[status]}", flush=True)
             elif status == 3:
                 timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
-                await channel_boss_occurence.send(f"**{boss}** - ***Appeared*** *{timestamp}*")
+                try:
+                    await channel_boss_occurence.send(f"**{boss}** - ***Appeared*** *{timestamp}*")
+                except Exception as e:
+                    print("wew i failed connecting to discord to send appeared", flush=True)
                 minis[boss] = 3
 
 async def check_for_banners(filename):
@@ -300,8 +309,11 @@ async def check_for_banners(filename):
             if ratio >= 85:
                 # Generate message sent to discord
                 timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
-                await channel_banners.send(f"**{banner_lookup[banner_text]}** ***will be spawning soon! Warriors, charge!*** *{timestamp}*")
-                
+                try:
+                    await channel_banners.send(f"**{banner_lookup[banner_text]}** ***will be spawning soon! Warriors, charge!*** *{timestamp}*")
+                except Exception as e:
+                    print("wew i failed connecting to discord to send banner", flush=True)
+
                 banner_close_x = random.randint(710, 720)
                 banner_close_y = random.randint(96, 110)
                 driver.tap([(banner_close_x, banner_close_y)])
@@ -342,7 +354,10 @@ class Button:
             # Tap the button
             x = random.randint(top_left[0], bottom_right[0])
             y = random.randint(top_left[1], bottom_right[1])
-            driver.tap([(x, y)])
+            try:
+                driver.tap([(x, y)])
+            except Exception as e:
+                print("wiwoweeee button tap interrupted weewoo", flush=True)
             await asyncio.sleep(0.5)
         else:
             print(f"{button_name} is not found in the image")
@@ -515,7 +530,10 @@ async def capture_battle_results(boss, boss_image):
 
     with open('battle-results.png', "rb") as image_file:
         timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
-        await channel_boss_deaths.send(f"**{boss}** ***was slain!*** *{timestamp}*", file=discord.File(image_file))
+        try:
+            await channel_boss_deaths.send(f"**{boss}** ***was slain!*** *{timestamp}*", file=discord.File(image_file))
+        except Exception as e:
+            print("wew i failed connecting to discord to send deadpics", flush=True)
 
     while is_in('screens/battle-result-screen'):
         await tap.close_battle_results()
@@ -653,9 +671,6 @@ async def on_ready():
 
     TOP_MVP = "Storm Dragon"
     TOP_MINI = "Orc Disaster"
-
-    current_boss = TOP_MVP
-    current_boss_type = 'MVP'
     
     counter = 0
     save_image("current-screen.png")
@@ -665,6 +680,8 @@ async def on_ready():
     current_screen = cv2.imread('current-screen.png')
     
     while True:
+        current_boss = TOP_MVP
+        current_boss_type = 'MVP'
         await cycle()
 
 async def cycle():
