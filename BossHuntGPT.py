@@ -407,6 +407,10 @@ class Button:
     async def close_map(self):
         button = cv2.imread('images/buttons/map-close-button.png')
         await self.find_and_tap(button, "map-close-button")
+    
+    async def disconnect(self):
+        button = cv2.imread('images/buttons/disconnected-button.png')
+        await self.find_and_tap(button, "disconnected-button")
 
 # Create an instance of the ExampleClass
 tap = Button()
@@ -520,10 +524,10 @@ async def capture_battle_results(boss, boss_image):
   
     await asyncio.sleep(1)
 
-    save_image("battle-results.png")
+    save_image("current-screen.png")
     # Crop the image
-    battle_results = cv2.imread('battle-results.png')
-    cropped_image = battle_results[130:410, 80:890]
+    current_screen = cv2.imread('current-screen.png')
+    cropped_image = current_screen[130:410, 80:890]
     downscaled_image = cv2.resize(cropped_image, (700, 242), interpolation=cv2.INTER_AREA)
     cv2.imwrite('battle-results.png', downscaled_image)
     counter = counter + 1
