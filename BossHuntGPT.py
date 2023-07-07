@@ -230,8 +230,7 @@ async def swipeUp(start_y, end_y, duration):
 
     await asyncio.sleep(0.5)
 
-    if counter % 2 == 0:
-        await check_for_banners('current-screen.png')
+    await check_for_banners('current-screen.png')
 
 def save_image(screenshot_filename):
     screenshot_filepath = os.path.join(os.getcwd(), screenshot_filename)
@@ -355,8 +354,8 @@ class Button:
         await asyncio.sleep(0.5)
         # print(f"(button click) Count = {counter}", flush=True)
 
-        if counter % 2 == 0:
-            await check_for_banners('current-screen.png')
+
+        await check_for_banners('current-screen.png')
 
     async def banner_close(self):
         button = cv2.imread('images/buttons/banner-close-button.png')
