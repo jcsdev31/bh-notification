@@ -199,7 +199,7 @@ def check_in_image(boss):
         cropped_image = current_screen[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
 
         # Save the cropped image to disk
-        cv2.imwrite('cropped_image.png', cropped_image)
+        # cv2.imwrite('cropped_image.png', cropped_image)
 
         # Check if any of the global images are found in the cropped image
         for i, status in enumerate(boss_status_img):
@@ -213,8 +213,8 @@ def check_in_image(boss):
     else:
         return "Image lookup failed!"
 
-async def swipeUp(start_y, end_y, duration):
-    global counter, current_screen
+async def swipe(start_y, end_y, duration, capture_speed):
+    global counter, current_screen, driver
 
     start_x = random.randint(155, 420)
     end_x = start_x + random.randint(1,10)
@@ -223,21 +223,32 @@ async def swipeUp(start_y, end_y, duration):
         driver.swipe(start_x, start_y, end_x, end_y, duration)
     except Exception as e:
         print("wiwoweeee button tap interrupted weewoo", flush=True)
+        driver.quit()
+        driver = establish_appium_connection()
+        await cycle()
 
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(capture_speed)
 
-    save_image("current-screen.png")
+    await save_image("current-screen.png")
     counter = counter + 1
     current_screen = cv2.imread('current-screen.png')
-    # print(f"(button click) Count = {counter}", flush=True)
 
-    await asyncio.sleep(0.5)
-
+    # await asyncio.sleep(0.2)
+    # if counter % 2 == 0:
     await check_for_banners('current-screen.png')
 
-def save_image(screenshot_filename):
+async def save_image(screenshot_filename):
+    global driver
     screenshot_filepath = os.path.join(os.getcwd(), screenshot_filename)
-    driver.save_screenshot(screenshot_filepath)
+
+    try:
+        driver.save_screenshot(screenshot_filepath)
+    except Exception as e:
+        print("wiwoweeee screenshot failed weewoo", flush=True)
+        driver.quit()
+        driver = establish_appium_connection()
+        await cycle()
+
 
 async def check_for_changes(boss, boss_image, status):
     if boss in mvps:
@@ -333,9 +344,9 @@ async def check_for_banners(filename):
                 break
 
 class Button:
-    async def find_and_tap(self, button, button_name):
+    async def find_and_tap(self, button, button_name, capture_speed):
 
-        global counter, current_screen
+        global counter, current_screen, driver
 
         # Convert the images to grayscale
         button_gray = cv2.cvtColor(button, cv2.COLOR_BGR2GRAY)
@@ -358,59 +369,61 @@ class Button:
                 driver.tap([(x, y)])
             except Exception as e:
                 print("wiwoweeee button tap interrupted weewoo", flush=True)
-            await asyncio.sleep(0.5)
+                driver.quit()
+                driver = establish_appium_connection()
+                await cycle()
+            await asyncio.sleep(capture_speed)
         else:
             print(f"{button_name} is not found in the image")
 
 
-        save_image("current-screen.png")
+        await save_image("current-screen.png")
         counter = counter + 1
         current_screen = cv2.imread('current-screen.png')
-        await asyncio.sleep(0.5)
-        # print(f"(button click) Count = {counter}", flush=True)
+        # await asyncio.sleep(0.2)
 
-
+        # if counter % 2 == 0:
         await check_for_banners('current-screen.png')
 
     async def banner_close(self):
         button = cv2.imread('images/buttons/banner-close-button.png')
-        await self.find_and_tap(button, "banner-close-button")
+        await self.find_and_tap(button, "banner-close-button", 0)
 
     async def battle_screen(self):
         button = cv2.imread('images/buttons/battle-screen-button.png')
-        await self.find_and_tap(button, "battle-screen-button")
+        await self.find_and_tap(button, "battle-screen-button", 0.5)
     
     async def close(self):
         button = cv2.imread('images/buttons/close-button.png')
-        await self.find_and_tap(button, "close-button")
+        await self.find_and_tap(button, "close-button", 0.2)
     
     async def mini_tab(self):
         button = cv2.imread('images/buttons/mini-tab-button.png')
-        await self.find_and_tap(button, "mini-tab-button")
+        await self.find_and_tap(button, "mini-tab-button", 0.2)
 
     async def mvp_screen(self):
         button = cv2.imread('images/buttons/mvp-screen-button.png')
-        await self.find_and_tap(button, "mvp-screen-button")
+        await self.find_and_tap(button, "mvp-screen-button", 0.5)
     
     async def mvp_tab(self):
         button = cv2.imread('images/buttons/mvp-tab-button.png')
-        await self.find_and_tap(button, "mvp-tab-button")
+        await self.find_and_tap(button, "mvp-tab-button", 0.2)
 
     async def unhide_icons(self):
         button = cv2.imread('images/buttons/unhide-icons-button.png')
-        await self.find_and_tap(button, "unhide-icons-button")
+        await self.find_and_tap(button, "unhide-icons-button", 0.5)
 
     async def close_battle_results(self):
         button = cv2.imread('images/screens/mvp-screen.png')
-        await self.find_and_tap(button, "mvp-screen")
+        await self.find_and_tap(button, "mvp-screen", 0)
     
     async def close_map(self):
         button = cv2.imread('images/buttons/map-close-button.png')
-        await self.find_and_tap(button, "map-close-button")
+        await self.find_and_tap(button, "map-close-button", 0.2)
     
     async def disconnect(self):
         button = cv2.imread('images/buttons/disconnected-button.png')
-        await self.find_and_tap(button, "disconnected-button")
+        await self.find_and_tap(button, "disconnected-button", 0)
 
 # Create an instance of the ExampleClass
 tap = Button()
@@ -445,16 +458,22 @@ def locate_boss(boss_name):
     current_gray = cv2.cvtColor(current_screen, cv2.COLOR_BGR2GRAY)
 
     # Find the image in the big image
-    result = cv2.matchTemplate(current_gray, screen_gray, cv2.TM_CCOEFF_NORMED)
-    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+    try:
+        result = cv2.matchTemplate(current_gray, screen_gray, cv2.TM_CCOEFF_NORMED)
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
 
-    # Check if the image was found
-    if max_val > 0.9:
-        return True
-    else:
-        return False
+        # Check if the image was found
+        if max_val > 0.9:
+            return True
+        else:
+            return False
+    except Exception as e:
+        print("Error occurred in locate_boss:", e)
+
+        
 
 async def go_to_mvp_tab():
+    global current_screen
     if is_in('screens/battle-result-screen'):
         await tap.close_battle_results()
 
@@ -466,15 +485,15 @@ async def go_to_mvp_tab():
             while not is_in('screens/mvp-button-screen'):
                 if not is_in('screens/mvp-screen'):
                     await tap.unhide_icons()
-                    # time.sleep(0.5)
+                    await save_image("current-screen.png")
+                    current_screen = cv2.imread('current-screen.png')
                 else: 
                     break
             await tap.mvp_screen()
-            # time.sleep(0.5)
         await tap.mvp_tab()
-        # time.sleep(0.5)
 
 async def go_to_mini_tab():
+    global current_screen
     if is_in('screens/battle-result-screen'):
         await tap.close_battle_results()
 
@@ -486,33 +505,44 @@ async def go_to_mini_tab():
             while not is_in('screens/mvp-button-screen'):
                 if not is_in('screens/mvp-screen'):
                     await tap.unhide_icons()
-                    # time.sleep(0.5)
+                    await save_image("current-screen.png")
+                    current_screen = cv2.imread('current-screen.png')
                 else: 
                     break
             await tap.mvp_screen()
-            # time.sleep(0.5)
         await tap.mini_tab()
-        # time.sleep(0.5)
 
 async def capture_battle_results(boss, boss_image):
     global counter
 
     filename = '-'.join(boss.lower().split())
-
+    find_count = 0
     while True:
         if await check_game_restarted():
-            while True:
-                if not locate_boss(boss):
-                    await check_game_restarted()
-
-                    y = random.randint(235, 435)
-                    await swipeUp(y, y - 150, 100)
-                    # time.sleep(0.5)
+            swipe_count = 0
+            while not locate_boss(boss):
+                await check_game_restarted()
+                if is_in('screens/battle-result-screen'):
+                    await tap.close_battle_results()
+                y = random.randint(235, 435)
+                await swipe(y, y - 150, 100, 0.5)
+                swipe_count = swipe_count + 1
+                if swipe_count == 10:
+                    if is_in('screens/battle-result-screen'):
+                        await tap.close_battle_results()
+                    await close_mvp_screen()
 
         if not is_in(f'boss-image/{filename}-wallpaper'):
-            await tap.find_and_tap(boss_image, "boss-sidebar-image")
+            await tap.find_and_tap(boss_image, "boss-sidebar-image", 0)
         else:
             break
+        
+        find_count = find_count + 1
+        if find_count == 5:
+            if is_in('screens/battle-result-screen'):
+                await tap.close_battle_results()
+            await close_mvp_screen()
+            find_count = 0
     
     while True:
         await check_game_restarted()
@@ -524,7 +554,7 @@ async def capture_battle_results(boss, boss_image):
   
     await asyncio.sleep(1)
 
-    save_image("current-screen.png")
+    await save_image("current-screen.png")
     # Crop the image
     current_screen = cv2.imread('current-screen.png')
     cropped_image = current_screen[130:410, 80:890]
@@ -565,7 +595,7 @@ async def reset_bosses(anchor_boss):
         while not locate_boss(anchor_boss):
             await check_game_restarted()
             y = random.randint(150, 200)
-            await swipeUp(y, y + 300, 100)
+            await swipe(y, y + 300, 100, 0)
 
         filename = '-'.join(anchor_boss.lower().split())
         boss_image = cv2.imread(f"images/boss-sidebar/{filename}.png")
@@ -573,12 +603,39 @@ async def reset_bosses(anchor_boss):
             if await check_game_restarted():
                 await reset_bosses(anchor_boss)
             if not is_in(f'boss-image/{filename}-wallpaper'):
-                await tap.find_and_tap(boss_image, "boss-sidebar-image")
+                await tap.find_and_tap(boss_image, "boss-sidebar-image", 0)
             else:
                 break
 
+async def get_previous_y(boss_image, boss):
+    global counter, current_screen, driver
+
+    await save_image("current-screen.png")
+    counter = counter + 1
+    current_screen = cv2.imread('current-screen.png')
+
+    # Convert the images to grayscale
+    button_gray = cv2.cvtColor(boss_image, cv2.COLOR_BGR2GRAY)
+    current_gray = cv2.cvtColor(current_screen, cv2.COLOR_BGR2GRAY)
+
+    # Find the button in the big image
+    result = cv2.matchTemplate(current_gray, button_gray, cv2.TM_CCOEFF_NORMED)
+    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+
+    # Check if the button was found
+    if max_val > 0.8:
+        # Get the coordinates of the button in the big image
+        top_left = max_loc
+        bottom_right = (top_left[0] + boss_image.shape[1], top_left[1] + boss_image.shape[0])
+
+        y = random.randint(top_left[1], bottom_right[1])
+        return y
+        
+    else:
+        print(f"{boss} is not found in the image")
+
 async def scan_mvps():
-    global current_boss, current_boss_type
+    global current_boss, current_boss_type, previous_boss
     if current_boss in mvps:
         for i, boss in enumerate(mvps):
             if boss == current_boss:
@@ -592,18 +649,24 @@ async def scan_mvps():
                     else:
                         swipe_count = 0
                         while not locate_boss(boss):
+
                             await check_game_restarted()
                             if is_in('screens/battle-result-screen'):
                                 await tap.close_battle_results()
-                            y = random.randint(235, 435)
-                            await swipeUp(y, y - 150, 100)
+
+                            filename = '-'.join(previous_boss.lower().split()) + ".png"
+                            boss_image = cv2.imread(f"images/boss-sidebar/{filename}")
+
+                            y = await get_previous_y(boss_image, boss)
+                            await swipe(y, y - 150, 100, 0)
+
                             swipe_count = swipe_count + 1
+
                             if swipe_count == 10:
                                 if is_in('screens/battle-result-screen'):
                                     await tap.close_battle_results()
                                 await close_mvp_screen()
-                                await go_to_mvp_tab()
-
+                                swipe_count = 0
 
                 # Check if it's the last item
                 if i == len(mvps) - 1:
@@ -614,9 +677,11 @@ async def scan_mvps():
                     # Get the next item
                     current_boss = list(mvps.keys())[i + 1]
 
+                previous_boss = boss
+
 
 async def scan_minis():
-    global current_boss, current_boss_type
+    global current_boss, current_boss_type, previous_boss
     if current_boss in minis:
         for i, boss in enumerate(minis):
             if boss == current_boss:
@@ -630,18 +695,24 @@ async def scan_minis():
                     else:
                         swipe_count = 0
                         while not locate_boss(boss):
+
                             await check_game_restarted()
                             if is_in('screens/battle-result-screen'):
                                 await tap.close_battle_results()
-                            y = random.randint(235, 435)
-                            await swipeUp(y, y - 150, 100)
+
+                            filename = '-'.join(previous_boss.lower().split()) + ".png"
+                            boss_image = cv2.imread(f"images/boss-sidebar/{filename}")
+
+                            y = await get_previous_y(boss_image, boss)
+                            await swipe(y, y - 150, 100, 0)
+
                             swipe_count = swipe_count + 1
+
                             if swipe_count == 10:
                                 if is_in('screens/battle-result-screen'):
                                     await tap.close_battle_results()
                                 await close_mvp_screen()
-                                await go_to_mini_tab()
-                            # time.sleep(0.5)
+                                swipe_count = 0
 
                 # Check if it's the last item
                 if i == len(minis) - 1:
@@ -651,6 +722,8 @@ async def scan_minis():
                 else:
                     # Get the next item
                     current_boss = list(minis.keys())[i + 1]
+                
+                previous_boss = boss
 
 
 intents = discord.Intents.default()
@@ -677,27 +750,39 @@ async def on_ready():
     TOP_MINI = "Orc Disaster"
     
     counter = 0
-    save_image("current-screen.png")
+    await save_image("current-screen.png")
     counter = counter + 1
     print(f"(initial) Count = {counter}", flush=True)
 
     current_screen = cv2.imread('current-screen.png')
     
-    while True:
-        current_boss = TOP_MVP
-        current_boss_type = 'MVP'
-        await cycle()
+    
+    current_boss = TOP_MVP
+    current_boss_type = 'MVP'
+
+    await cycle()
 
 async def cycle():
-    await go_to_mvp_tab() #
-    await reset_bosses(TOP_MVP) #
-    await scan_mvps()
-    await close_mvp_screen()
-    await go_to_mini_tab() #
-    await reset_bosses(TOP_MINI) #
-    await scan_minis()
-    await close_mvp_screen() #
+    while True:
+        await go_to_mvp_tab() #
+        await reset_bosses(TOP_MVP) #
+        await scan_mvps()
+        await close_mvp_screen()
+        await go_to_mini_tab() #
+        await reset_bosses(TOP_MINI) #
+        await scan_minis()
+        await close_mvp_screen() #
 
 # Start the bot
-client.run(config.BOT_TOKEN)
-
+while True:
+    try:
+        client.run(config.BOT_TOKEN)
+    except Exception as e:
+        print(f"An exception occurred: {str(e)}")
+        driver.quit()
+        driver = establish_appium_connection()
+        # Perform any necessary cleanup or error handling
+        # before restarting the client
+        continue
+    else:
+        break
