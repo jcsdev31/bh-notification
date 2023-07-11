@@ -349,7 +349,7 @@ async def check_for_banners(filename):
     await check_if_interrupted()
 
 async def check_if_interrupted():
-    global current_boss, current_boss_type
+    global current_boss, current_boss_type, current_screen
     if is_in('buttons/disconnected-button'):
         while is_in('buttons/disconnected-button'):
             await tap.disconnect()
@@ -360,7 +360,57 @@ async def check_if_interrupted():
     elif is_in('buttons/update-button'):
         while is_in('buttons/update-button'):
             await tap.update()
+    elif is_in('buttons/home-screen-button'):
+        is_app_launched = False
+        while not is_app_launched:
+            while is_in('buttons/home-screen-button'):
+                print("im about to click rox app", flush=True)
+                try:
+                    await tap.open_app()
+                except Exception as e:
+                    print(f"An exception occured: {str(e)}")
+            while is_in('screens/welcome-popup-screen'):
+                print("im about to close welcome popup", flush=True)
+                try:
+                    await tap.close()
+                except Exception as e:
+                    print(f"An exception occured: {str(e)}")
+            while is_in('buttons/enter-game-button'):
+                print("im about to click enter character select", flush=True)
+                try:
+                    await tap.enter_character_select()
+                except Exception as e:
+                    print(f"An exception occured: {str(e)}")
+            while is_in('buttons/select-character-button'):
+                print("im about to select character", flush=True)
+                try:
+                    await tap.select_character()
+                except Exception as e:
+                    print(f"An exception occured: {str(e)}")
+            while is_in('screens/in-game-popup-screen'):
+                print("im about to close popup", flush=True)
+                try:
+                    await tap.close()
+                except Exception as e:
+                    print(f"An exception occured: {str(e)}")
+            while is_in('screens/retrieve-screen'):
+                print("im about to close retrieve screen", flush=True)
+                try:
+                    await tap.close()
+                except Exception as e:
+                    print(f"An exception occured: {str(e)}")
+                is_app_launched = True
+            if is_in('buttons/unhide-icons-button'):
+                is_app_launched = True
+            if is_in('screens/mvp-screen'):
+                is_app_launched = True
+            await asyncio.sleep(2)
+            await save_image("current-screen.png")
+            current_screen = cv2.imread('current-screen.png')
 
+        current_boss = TOP_MVP
+        current_boss_type = 'MVP'
+        await cycle()
 class Button:
     async def find_and_tap(self, button, button_name, capture_speed):
 
@@ -441,11 +491,23 @@ class Button:
     
     async def disconnect(self):
         button = cv2.imread('images/buttons/disconnected-button.png')
-        await self.find_and_tap(button, "disconnected-button", 0)
+        await self.find_and_tap(button, "disconnected-button", 1)
 
     async def update(self):
         button = cv2.imread('images/buttons/update-button.png')
-        await self.find_and_tap(button, "update-button", 0)
+        await self.find_and_tap(button, "update-button", 1)
+    
+    async def open_app(self):
+        button = cv2.imread('images/buttons/home-screen-button.png')
+        await self.find_and_tap(button, "home-screen-button", 0.5)
+
+    async def enter_character_select(self):
+        button = cv2.imread('images/buttons/enter-game-button.png')
+        await self.find_and_tap(button, "enter-character-select-button", 0.5)
+    
+    async def select_character(self):
+        button = cv2.imread('images/buttons/select-character-button.png')
+        await self.find_and_tap(button, "select-character-button", 0.5)
 
 # Create an instance of the Button Class
 tap = Button()
