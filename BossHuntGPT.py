@@ -105,6 +105,42 @@ banner_lookup = {
     'Coelacanth w': 'Coelacanth'
 }
 
+# Check the full name of the boss in the banner
+emoji_id = {
+    'Mistress' : '<:mistress:1128500941654601758>',
+    'Phreeoni' : '<:phreeoni:1128500973225136200>',
+    'Kraken' : '<:kraken:1128500912948776970>',
+    'Eddga' : '<:eddga:1128500904291729408>',
+    'Maya' : '<:maya:1128500937917481044>',
+    'Orc Hero' : '<:orchero:1128500955172851732>',
+    'Pharaoh' : '<:pharaoh:1128500967042732163>',
+    'Orc Lord' : '<:orclord:1128500958037540916>',
+    'Amon Ra' : '<:amonra:1128500895320113293>',
+    'Doppelganger' : '<:doppelganger:1128500900659470438>',
+    'Overseer of Time' : '<:overseeroftime:1128500962076663878>',
+    'Morroc' : '<:morroc:1128500946008277103>',
+    'Lost Dragon' : '<:lostdragon:1128500935195369533>',
+    'Tao Gunka' : '<:taogunka:1128500987758391326>',
+    'Fallen Bishop' : '<:fallenbishop:1128500908431527956>',
+    'Lord of the Dead' : '<:lordofthedead:1128500924466331678>',
+    'Eclipse' : '<:eclipse:1128501089814192250>',
+    'Dragon Fly' : '<:dragonfly:1128501085783457833>',
+    'Mastering' : '<:mastering:1128501105152761936>',
+    'Ghostring' : '<:ghostring:1128501095765909615>',
+    'Toad' : '<:toad:1128501130767368283>',
+    'King Dramoh' : '<:kingdramoh:1128501100933304340>',
+    'Deviling' : '<:deviling:1128501081677250632>',
+    'Angeling' : '<:angeling:1128501060651204688>',
+    'Dark Priest' : '<:darkpriest:1128501077571022879>',
+    'Vagabond Wolf' : '<:vagabondwolf:1128501134886182955>',
+    'Chimera' : '<:chimera:1128501071283753020>',
+    'Mysteltainn' : '<:mysteltainn:1128501109095399504>',
+    'Ogretooth' : '<:ogretooth:1128501126266892379>',
+    'Necromancer' : '<:necromancer:1128501119723769918>',
+    'Naght Sieger' : '<:naghtsieger:1128501113625268424>',
+    'Coelacanth' : '<:coelacanth:1128501073599008770>',
+}
+
 # Define a dictionary for the boss status
 boss_status = {
     0: 'Longer Time',
@@ -269,7 +305,7 @@ async def check_for_changes(boss, boss_image, status):
             elif status == 3:
                 timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
                 try:
-                    await channel_boss_occurence.send(f"**{boss}** - ***Appeared*** *{timestamp}*")
+                    await channel_boss_occurence.send(f"{emoji_id[boss]} **{boss}** - ***Appeared*** *{timestamp}*")
                 except Exception as e:
                     print("wew i failed connecting to discord to send appeared", flush=True)
                     print(f"An exception occurred: {str(e)}")
@@ -293,7 +329,7 @@ async def check_for_changes(boss, boss_image, status):
             elif status == 3:
                 timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
                 try:
-                    await channel_boss_occurence.send(f"**{boss}** - ***Appeared*** *{timestamp}*")
+                    await channel_boss_occurence.send(f"{emoji_id[boss]} **{boss}** - ***Appeared*** *{timestamp}*")
                 except Exception as e:
                     print("wew i failed connecting to discord to send appeared", flush=True)
                     print(f"An exception occurred: {str(e)}")
@@ -323,7 +359,7 @@ async def check_for_banners(filename):
                 # Generate message sent to discord
                 timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
                 try:
-                    await channel_banners.send(f"**{banner_lookup[banner_text]}** ***will be spawning soon! Warriors, charge!*** *{timestamp}*")
+                    await channel_banners.send(f"{emoji_id[banner_lookup[banner_text]]} **{banner_lookup[banner_text]}** ***will be spawning soon! Warriors, charge!*** *{timestamp}*")
                 except Exception as e:
                     print("wew i failed connecting to discord to send banner", flush=True)
                     print(f"An exception occurred: {str(e)}")
@@ -663,7 +699,7 @@ async def capture_battle_results(boss, boss_image):
     with open('battle-results.png', "rb") as image_file:
         timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
         try:
-            await channel_boss_deaths.send(f"**{boss}** ***was slain!*** *{timestamp}*", file=discord.File(image_file))
+            await channel_boss_deaths.send(f"{emoji_id[boss]} **{boss}** ***was slain!*** *{timestamp}*", file=discord.File(image_file))
         except Exception as e:
             print("wew i failed connecting to discord to send deadpics", flush=True)
             print(f"An exception occurred: {str(e)}")
