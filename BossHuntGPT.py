@@ -18,7 +18,7 @@ def establish_appium_connection():
         "platformName": "Android",
         "deviceName": "Android Emulator",
         "autoGrantPermissions": False,
-        "udid": "emulator-5554",  # Change this with device name found in "adb devices" cmd
+        "udid": "127.0.0.1:5556",  # Change this with device name found in "adb devices" cmd
         "noReset": True
     }
 
@@ -680,6 +680,8 @@ async def capture_battle_results(boss, boss_image):
     
     while True:
         await check_game_restarted()
+        await save_image("current-screen.png")
+        current_screen = cv2.imread('current-screen.png')
         if is_in(f'buttons/mvp-tab-button') or is_in(f'buttons/mini-tab-button') or is_in(f'screens/mvp-tab-screen') or is_in(f'screens/mini-tab-screen'):
             await tap.battle_screen()
         else:
@@ -689,8 +691,8 @@ async def capture_battle_results(boss, boss_image):
     await asyncio.sleep(1)
 
     await save_image("current-screen.png")
-    # Crop the image
     current_screen = cv2.imread('current-screen.png')
+    # Crop the image
     cropped_image = current_screen[130:410, 80:890]
     downscaled_image = cv2.resize(cropped_image, (700, 242), interpolation=cv2.INTER_AREA)
     cv2.imwrite('battle-results.png', downscaled_image)
