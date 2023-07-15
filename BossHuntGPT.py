@@ -18,7 +18,7 @@ def establish_appium_connection():
         "platformName": "Android",
         "deviceName": "Android Emulator",
         "autoGrantPermissions": False,
-        "udid": "127.0.0.1:5556",  # Change this with device name found in "adb devices" cmd
+        "udid": "emulator-5554",  # Change this with device name found in "adb devices" cmd
         "noReset": True
     }
 
@@ -32,8 +32,6 @@ driver = establish_appium_connection()
 
 # Set the banner text to monitor for
 banner_texts = [   
-    "Storm Dragon w",
-    "Orc Disaster w",
     "Mistress w",
     "Phreeoni w",
     "Kraken w",
@@ -69,8 +67,6 @@ banner_texts = [
 
 # Check the full name of the boss in the banner
 banner_lookup = {
-    'Storm Dragon w': 'Storm Dragon',
-    'Orc Disaster w': 'Orc Disaster',
     'Mistress w': 'Mistress',
     'Phreeoni w': 'Phreeoni',
     'Kraken w': 'Kraken',
@@ -151,7 +147,6 @@ boss_status = {
 
 # Define a dictionary for the bosses and their status
 minis = {
-    'Orc Disaster': -1,
     'Eclipse': -1,
     'Dragon Fly': -1,
     'Ghostring': -1,
@@ -172,7 +167,6 @@ minis = {
 
 # Define a dictionary for the bosses and their status
 mvps = {
-    'Storm Dragon': -1,
     'Phreeoni': -1,
     'Mistress': -1,
     'Eddga': -1,
@@ -889,9 +883,9 @@ intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 
 # Set the ID of the Discord channel to send messages to
-channel_banners_id = 1087725231159914606
-channel_boss_occurence_id = 1126518099454201866
-channel_boss_deaths_id = 1126518142500352010
+channel_banners_id = 1128801527969091736
+channel_boss_occurence_id = 1128801544473677985
+channel_boss_deaths_id = 1128801554686820432
 
 # Event listener for when the bot is ready
 @client.event
@@ -912,7 +906,6 @@ async def on_ready():
     print(f"(initial) Count = {counter}", flush=True)
 
     current_screen = cv2.imread('current-screen.png')
-    
     
     current_boss = TOP_MVP
     current_boss_type = 'MVP'
