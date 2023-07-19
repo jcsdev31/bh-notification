@@ -370,6 +370,7 @@ async def check_for_banners(filename):
             ratio4 = fuzz.partial_ratio(extracted_text, 'Due to')
             ratio5 = fuzz.partial_ratio(extracted_text, 'only')
             ratio6 = fuzz.partial_ratio(extracted_text, 'has been')
+            ratio6 = fuzz.partial_ratio(extracted_text, 'Congrat')
             if ratio1 >= 90 or ratio2 >= 90 or ratio3 >= 90 or ratio4 >= 90 or ratio5 >= 90 or ratio6 >= 90:
                 banner_close_x = random.randint(710, 720)
                 banner_close_y = random.randint(96, 110)
