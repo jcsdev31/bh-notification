@@ -18,7 +18,7 @@ def establish_appium_connection():
         "platformName": "Android",
         "deviceName": "Android Emulator",
         "autoGrantPermissions": False,
-        "udid": "emulator-5554",  # Change this with device name found in "adb devices" cmd
+        "udid": "127.0.0.1:5625",  # Change this with device name found in "adb devices" cmd
         "noReset": True
     }
 
@@ -519,6 +519,10 @@ class Button:
     async def close_map(self):
         button = cv2.imread('images/buttons/map-close-button.png')
         await self.find_and_tap(button, "map-close-button", 0.5)
+
+    async def close_kpass(self):
+        button = cv2.imread('images/buttons/kpass-close-button.png')
+        await self.find_and_tap(button, "kpass-close-button", 0.5)
     
     async def disconnect(self):
         button = cv2.imread('images/buttons/disconnected-button.png')
@@ -592,14 +596,15 @@ async def go_to_mvp_tab():
     if is_in('screens/battle-result-screen'):
         await tap.close_battle_results()
 
-    if is_in('screens/map-screen'):
-            await tap.close_map()
-
     while not is_in('screens/mvp-tab-screen'):
         while not is_in('screens/mvp-screen'):
             while not is_in('screens/mvp-button-screen'):
                 if not is_in('screens/mvp-screen'):
                     await tap.unhide_icons()
+                    if is_in('screens/map-screen'):
+                        await tap.close_map()
+                    if is_in('screens/kingdom-pass-screen'):
+                        await tap.close_kpass()
                     await save_image("current-screen.png")
                     current_screen = cv2.imread('current-screen.png')
                 else: 
@@ -612,14 +617,15 @@ async def go_to_mini_tab():
     if is_in('screens/battle-result-screen'):
         await tap.close_battle_results()
 
-    if is_in('screens/map-screen'):
-            await tap.close_map()
-
     while not is_in('screens/mini-tab-screen'):
         while not is_in('screens/mvp-screen'):
             while not is_in('screens/mvp-button-screen'):
                 if not is_in('screens/mvp-screen'):
                     await tap.unhide_icons()
+                    if is_in('screens/map-screen'):
+                        await tap.close_map()
+                    if is_in('screens/kingdom-pass-screen'):
+                        await tap.close_kpass()
                     await save_image("current-screen.png")
                     current_screen = cv2.imread('current-screen.png')
                 else: 
@@ -717,6 +723,9 @@ async def close_mvp_screen():
 async def check_game_restarted():
     if is_in('screens/map-screen'):
         await tap.close_map()
+    if is_in('screens/kingdom-pass-screen'):
+        await tap.close_kpass()
+        
     if is_in('buttons/unhide-icons-button'):
         print(f'hey i reached check_game_restarted haha {current_boss_type} : {current_boss}', flush=True)
         if current_boss_type == 'MVP':
@@ -824,7 +833,6 @@ async def scan_mvps():
                     current_boss = list(mvps.keys())[i + 1]
 
                 previous_boss = boss
-
 
 async def scan_minis():
     global current_boss, current_boss_type, previous_boss
