@@ -299,7 +299,7 @@ async def check_for_changes(boss, boss_image, status):
             elif status == 3:
                 timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
                 try:
-                    await channel_boss_occurence.send(f"{emoji_id[boss]} **{boss}** - ***Appeared*** *{timestamp}*")
+                    await channel_boss_occurence.send(f"{emoji_id[boss]} **{boss}** - ***Appeared*** :green_circle: *{timestamp}*")
                 except Exception as e:
                     print("wew i failed connecting to discord to send appeared", flush=True)
                     print(f"An exception occurred: {str(e)}")
@@ -323,7 +323,7 @@ async def check_for_changes(boss, boss_image, status):
             elif status == 3:
                 timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
                 try:
-                    await channel_boss_occurence.send(f"{emoji_id[boss]} **{boss}** - ***Appeared*** *{timestamp}*")
+                    await channel_boss_occurence.send(f"{emoji_id[boss]} **{boss}** - ***Appeared*** :green_circle: *{timestamp}*")
                 except Exception as e:
                     print("wew i failed connecting to discord to send appeared", flush=True)
                     print(f"An exception occurred: {str(e)}")
@@ -685,7 +685,7 @@ async def capture_battle_results(boss, boss_image):
         current_screen = cv2.imread('current-screen.png')
         if is_in(f'buttons/mvp-tab-button') or is_in(f'buttons/mini-tab-button') or is_in(f'screens/mvp-tab-screen') or is_in(f'screens/mini-tab-screen'):
             await tap.battle_screen()
-        else:
+        if is_in('screens/battle-result-screen'):
             break
     
   
@@ -892,9 +892,9 @@ intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 
 # Set the ID of the Discord channel to send messages to
-channel_banners_id = 1128801527969091736
-channel_boss_occurence_id = 1128801544473677985
-channel_boss_deaths_id = 1128801554686820432
+channel_banners_id = 1131350310284185631
+channel_boss_occurence_id = 1131350326855880734
+channel_boss_deaths_id = 1131350334908932197
 
 # Event listener for when the bot is ready
 @client.event
