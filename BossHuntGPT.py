@@ -1,6 +1,5 @@
 from appium import webdriver
 import os
-import time
 import cv2
 import random
 import discord
@@ -610,6 +609,8 @@ async def go_to_mvp_tab():
                 else: 
                     break
             await tap.mvp_screen()
+        if is_in('screens/battle-result-screen'):
+            await tap.close_battle_results()
         await tap.mvp_tab()
 
 async def go_to_mini_tab():
@@ -631,6 +632,8 @@ async def go_to_mini_tab():
                 else: 
                     break
             await tap.mvp_screen()
+        if is_in('screens/battle-result-screen'):
+            await tap.close_battle_results()
         await tap.mini_tab()
 
 async def capture_battle_results(boss, boss_image):
