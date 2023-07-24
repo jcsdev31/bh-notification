@@ -1,4 +1,5 @@
 # Import the necessary libraries
+import time
 from appium import webdriver
 import os
 import cv2
@@ -19,7 +20,7 @@ def establish_appium_connection():
         "platformName": "Android",
         "deviceName": "Android Emulator",
         "autoGrantPermissions": False,
-        "udid": "127.0.0.1:5625",  # This is the device ID, replace this with your device ID
+        "udid": "127.0.0.1:5635",  # This is the device ID, replace this with your device ID
         "noReset": True
     }
 
@@ -1008,7 +1009,9 @@ async def on_ready():
 
 # Function to perform a cycle of scanning for bosses
 async def cycle():
+    arr = []
     while True:
+        start_time = time.time()
         # Go to the MVP tab and reset the list of MVPs
         await go_to_mvp_tab()
         await reset_bosses(TOP_MVP)
@@ -1021,7 +1024,11 @@ async def cycle():
         # Scan for MINIs and then close the MVP screen
         await scan_minis()
         await close_mvp_screen()
-
+        end_time = time.time()
+        print(f"Time for 1 cycle: {end_time - start_time:.2f} seconds", flush=True)
+        arr.append(end_time - start_time)
+        average = sum(arr) / len(arr)
+        print(f"Average: {average:.2f} seconds", flush=True)
 # Start the bot
 while True:
     try:
