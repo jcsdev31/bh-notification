@@ -20,7 +20,7 @@ def establish_appium_connection():
         "platformName": "Android",
         "deviceName": "Android Emulator",
         "autoGrantPermissions": False,
-        "udid": "127.0.0.1:5635",  # This is the device ID, replace this with your device ID
+        "udid": "127.0.0.1:5625",  # This is the device ID, replace this with your device ID
         "noReset": True
     }
 
@@ -50,6 +50,8 @@ banner_texts = [
     "Tao Gunka w",
     "Bishop w",
     "Dead w",
+    "Arc Ang",
+    "Gioia w",
     "Eclipse w",
     "Dragon Fly w",
     "Mastering w",
@@ -65,7 +67,9 @@ banner_texts = [
     "Ogretooth w",
     "Necromancer w",
     "Sieger w",
-    "Coelacanth w"]
+    "Coelacanth w",
+    "Skeggiold w",
+    "Observation w",]
 
 # Define a lookup dictionary that maps lookup boss words/phrases from the banner to their actual names
 banner_lookup = {
@@ -85,6 +89,8 @@ banner_lookup = {
     'Tao Gunka w': 'Tao Gunka',
     'Bishop w': 'Fallen Bishop',
     'Dead w': 'Lord of the Dead',
+    'Arc Ang': 'Arc Angeling',
+    'Gioia w': 'Gioia',
     'Eclipse w': 'Eclipse',
     'Dragon Fly w': 'Dragon Fly',
     'Mastering w': 'Mastering',
@@ -100,7 +106,9 @@ banner_lookup = {
     'Ogretooth w': 'Ogretooth',
     'Necromancer w': 'Necromancer',
     'Sieger w': 'Naght Sieger',
-    'Coelacanth w': 'Coelacanth'
+    'Coelacanth w': 'Coelacanth',
+    'Skeggiold w': 'Skeggiold',
+    'Observation w': 'Observation',
 }
 
 # Define a dictionary that maps full boss names to their corresponding emoji IDs
@@ -121,6 +129,8 @@ emoji_id = {
     'Tao Gunka' : '<:taogunka:1128500987758391326>',
     'Fallen Bishop' : '<:fallenbishop:1128500908431527956>',
     'Lord of the Dead' : '<:lordofthedead:1128500924466331678>',
+    'Arc Angeling' : '<:arcangeling:1156347567530070077>',
+    'Gioia' : '<:gioia:1156347569920815165>',
     'Eclipse' : '<:eclipse:1128501089814192250>',
     'Dragon Fly' : '<:dragonfly:1128501085783457833>',
     'Mastering' : '<:mastering:1128501105152761936>',
@@ -137,6 +147,8 @@ emoji_id = {
     'Necromancer' : '<:necromancer:1128501119723769918>',
     'Naght Sieger' : '<:naghtsieger:1128501113625268424>',
     'Coelacanth' : '<:coelacanth:1128501073599008770>',
+    'Skeggiold' : '<:skeggiold:1156347499091599463>',
+    'Observation' : '<:observation:1156347494511415316>',
 }
 
 # Define a dictionary for the status of bosses
@@ -144,7 +156,7 @@ boss_status = {
     0: 'Longer Time',
     1: 'Short Time',
     2: 'Refreshing Soon',
-    3: 'Appeared'
+    3: 'Appeared',
 }
 
 # Define a dictionary for the status of mini bosses
@@ -166,6 +178,8 @@ minis = {
     'Necromancer': -1,
     'Naght Sieger': -1,
     'Coelacanth': -1,
+    'Skeggiold': -1,
+    'Observation': -1,
 }
 
 # Define a dictionary for the status of MVP bosses
@@ -187,6 +201,8 @@ mvps = {
     'Tao Gunka': -1,
     'Lord of the Dead': -1,
     'Fallen Bishop': -1,
+    'Arc Angeling': -1,
+    'Gioia': -1,
 }
 
 # Load status images for each boss status
@@ -989,8 +1005,8 @@ async def on_ready():
     channel_boss_deaths = client.get_channel(channel_boss_deaths_id)
 
     # Set the first boss (anchor boss) to be scanned for each type
-    TOP_MVP = "Phreeoni"
-    TOP_MINI = "Eclipse"
+    TOP_MVP = "Mistress"
+    TOP_MINI = "Dragon Fly"
     
     # Initialize the counter and save the current screen
     counter = 0
