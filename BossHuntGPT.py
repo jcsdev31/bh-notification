@@ -1,209 +1,22 @@
 # Import the necessary libraries
 import time
 from appium import webdriver
+from connections.driver_connect import establish_appium_connection
+from connections.discord_connect import startClient, getChannel, Channel
 import os
 import cv2
 import random
 import discord
-from discord import Intents
 import asyncio
 from datetime import datetime
-from PIL import Image, ImageOps, ImageFilter
+from PIL import Image, ImageOps
 import pytesseract
 from fuzzywuzzy import fuzz
 import config
-
-# Function to establish Appium connection with the emulator/device
-def establish_appium_connection():
-    # Set the capabilities for the Appium connection
-    desired_caps = {
-        "platformName": "Android",
-        "deviceName": "Android Emulator",
-        "autoGrantPermissions": False,
-        "udid": "127.0.0.1:5625",  # This is the device ID, replace this with your device ID
-        "noReset": True
-    }
-
-    # Establish the Appium connection and return the driver object
-    driver = webdriver.Remote("http://localhost:4723/wd/hub", desired_caps)
-    return driver
+from constants.bosses import banner_texts, banner_lookup, emoji_id, boss_status, minis, mvps
 
 # Establish the Appium connection and assign the driver to a global variable
 driver = establish_appium_connection()
-
-
-# Define the words/phrases that you want to look for in the banner
-banner_texts = [   
-    "Mistress w",
-    "Phreeoni w",
-    "Kraken w",
-    "Eddga w",
-    "Maya w",
-    "Orc Hero w",
-    "Pharaoh w",
-    "Orc Lord w",
-    "Amon Ra w",
-    "ganger w",
-    "Time w",
-    "Morroc w",
-    "Lost Dragon w",
-    "Tao Gunka w",
-    "Bishop w",
-    "Dead w",
-    "Arc Ang",
-    "Gioia w",
-    "Eclipse w",
-    "Dragon Fly w",
-    "Mastering w",
-    "Ghostring w",
-    "Toad w",
-    "Dramoh w",
-    "Deviling w",
-    "Angeling w",
-    "Priest w",
-    "Wolf w",
-    "Chimera w",
-    "Mysteltainn w",
-    "Ogretooth w",
-    "Necromancer w",
-    "Sieger w",
-    "Coelacanth w",
-    "Skeggiold w",
-    "Observation w",]
-
-# Define a lookup dictionary that maps lookup boss words/phrases from the banner to their actual names
-banner_lookup = {
-    'Mistress w': 'Mistress',
-    'Phreeoni w': 'Phreeoni',
-    'Kraken w': 'Kraken',
-    'Eddga w': 'Eddga',
-    'Maya w': 'Maya',
-    'Orc Hero w': 'Orc Hero',
-    'Pharaoh w': 'Pharaoh',
-    'Orc Lord w': 'Orc Lord',
-    'Amon Ra w': 'Amon Ra',
-    'ganger w': 'Doppelganger',
-    'Time w': 'Overseer of Time',
-    'Morroc w': 'Morroc',
-    'Lost Dragon w': 'Lost Dragon',
-    'Tao Gunka w': 'Tao Gunka',
-    'Bishop w': 'Fallen Bishop',
-    'Dead w': 'Lord of the Dead',
-    'Arc Ang': 'Arc Angeling',
-    'Gioia w': 'Gioia',
-    'Eclipse w': 'Eclipse',
-    'Dragon Fly w': 'Dragon Fly',
-    'Mastering w': 'Mastering',
-    'Ghostring w': 'Ghostring',
-    'Toad w': 'Toad',
-    'Dramoh w': 'King Dramoh',
-    'Deviling w': 'Deviling',
-    'Angeling w': 'Angeling',
-    'Priest w': 'Dark Priest',
-    'Wolf w': 'Vagabond Wolf',
-    'Chimera w': 'Chimera',
-    'Mysteltainn w': 'Mysteltainn',
-    'Ogretooth w': 'Ogretooth',
-    'Necromancer w': 'Necromancer',
-    'Sieger w': 'Naght Sieger',
-    'Coelacanth w': 'Coelacanth',
-    'Skeggiold w': 'Skeggiold',
-    'Observation w': 'Observation',
-}
-
-# Define a dictionary that maps full boss names to their corresponding emoji IDs
-emoji_id = {
-    'Mistress' : '<:mistress:1128500941654601758>',
-    'Phreeoni' : '<:phreeoni:1128500973225136200>',
-    'Kraken' : '<:kraken:1128500912948776970>',
-    'Eddga' : '<:eddga:1128500904291729408>',
-    'Maya' : '<:maya:1128500937917481044>',
-    'Orc Hero' : '<:orchero:1128500955172851732>',
-    'Pharaoh' : '<:pharaoh:1128500967042732163>',
-    'Orc Lord' : '<:orclord:1128500958037540916>',
-    'Amon Ra' : '<:amonra:1128500895320113293>',
-    'Doppelganger' : '<:doppelganger:1128500900659470438>',
-    'Overseer of Time' : '<:overseeroftime:1128500962076663878>',
-    'Morroc' : '<:morroc:1128500946008277103>',
-    'Lost Dragon' : '<:lostdragon:1128500935195369533>',
-    'Tao Gunka' : '<:taogunka:1128500987758391326>',
-    'Fallen Bishop' : '<:fallenbishop:1128500908431527956>',
-    'Lord of the Dead' : '<:lordofthedead:1128500924466331678>',
-    'Arc Angeling' : '<:arcangeling:1156347567530070077>',
-    'Gioia' : '<:gioia:1156347569920815165>',
-    'Eclipse' : '<:eclipse:1128501089814192250>',
-    'Dragon Fly' : '<:dragonfly:1128501085783457833>',
-    'Mastering' : '<:mastering:1128501105152761936>',
-    'Ghostring' : '<:ghostring:1128501095765909615>',
-    'Toad' : '<:toad:1128501130767368283>',
-    'King Dramoh' : '<:kingdramoh:1128501100933304340>',
-    'Deviling' : '<:deviling:1128501081677250632>',
-    'Angeling' : '<:angeling:1128501060651204688>',
-    'Dark Priest' : '<:darkpriest:1128501077571022879>',
-    'Vagabond Wolf' : '<:vagabondwolf:1128501134886182955>',
-    'Chimera' : '<:chimera:1128501071283753020>',
-    'Mysteltainn' : '<:mysteltainn:1128501109095399504>',
-    'Ogretooth' : '<:ogretooth:1128501126266892379>',
-    'Necromancer' : '<:necromancer:1128501119723769918>',
-    'Naght Sieger' : '<:naghtsieger:1128501113625268424>',
-    'Coelacanth' : '<:coelacanth:1128501073599008770>',
-    'Skeggiold' : '<:skeggiold:1156347499091599463>',
-    'Observation' : '<:observation:1156347494511415316>',
-}
-
-# Define a dictionary for the status of bosses
-boss_status = {
-    0: 'Longer Time',
-    1: 'Short Time',
-    2: 'Refreshing Soon',
-    3: 'Appeared',
-}
-
-# Define a dictionary for the status of mini bosses
-# The initial status is set to -1 which might represent 'unknown' or 'not yet checked'
-minis = {
-    'Eclipse': -1,
-    'Dragon Fly': -1,
-    'Ghostring': -1,
-    'Mastering': -1,
-    'King Dramoh': -1,
-    'Toad': -1,
-    'Deviling': -1,
-    'Angeling': -1,
-    'Dark Priest': -1,
-    'Vagabond Wolf': -1,
-    'Chimera': -1,
-    'Mysteltainn': -1,
-    'Ogretooth': -1,
-    'Necromancer': -1,
-    'Naght Sieger': -1,
-    'Coelacanth': -1,
-    'Skeggiold': -1,
-    'Observation': -1,
-}
-
-# Define a dictionary for the status of MVP bosses
-# The initial status is set to -1 which might represent 'unknown' or 'not yet checked'
-mvps = {
-    'Phreeoni': -1,
-    'Mistress': -1,
-    'Eddga': -1,
-    'Kraken': -1,
-    'Maya': -1,
-    'Orc Hero': -1,
-    'Pharaoh': -1,
-    'Orc Lord': -1,
-    'Amon Ra': -1,
-    'Doppelganger': -1,
-    'Morroc': -1,
-    'Overseer of Time': -1,
-    'Lost Dragon': -1,
-    'Tao Gunka': -1,
-    'Lord of the Dead': -1,
-    'Fallen Bishop': -1,
-    'Arc Angeling': -1,
-    'Gioia': -1,
-}
 
 # Load status images for each boss status
 # These images are used to identify the status of a boss in the game
@@ -252,7 +65,7 @@ def check_in_image(boss):
 
     # Find the small image in the larger image
     result = cv2.matchTemplate(current_gray, boss_gray, cv2.TM_CCOEFF_NORMED)
-    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+    _, max_val, _, max_loc = cv2.minMaxLoc(result)
 
     # If the small image was found in the larger image
     # The value used for max_val in the following code is (0.9) which means it needs a 90% accuracy rate to execute the code block
@@ -271,18 +84,19 @@ def check_in_image(boss):
 
             # Spread the tuple to its own variable
             # Only one of the variables are used but the others are still necessary for the values to be stored correctly
-            global_min_val, status_max_val, global_min_loc, global_max_loc = cv2.minMaxLoc(status_result)
+            _, status_max_val, _, _ = cv2.minMaxLoc(status_result)
             
             # This is similar to the previous implementation but uses an 80% accuracy value
             if status_max_val > 0.8:
                 # Return whichever boss status lookup image is found in the cropped image
-                return i       
+                return i
+            
     else:
         return "Image lookup failed!"
 
 # Function to perform a swipe action in the game
 async def swipe(start_y, end_y, duration, capture_speed):
-    global counter, current_screen, driver
+    global current_screen, driver
 
     start_x = random.randint(155, 420)
     end_x = start_x + random.randint(1,10)
@@ -298,7 +112,6 @@ async def swipe(start_y, end_y, duration, capture_speed):
     await asyncio.sleep(capture_speed)
 
     await save_image("current-screen.png")
-    counter = counter + 1
     current_screen = cv2.imread('current-screen.png')
 
     await check_for_banners('current-screen.png')
@@ -321,7 +134,7 @@ async def check_for_changes(boss, boss_image, status):
     # If the boss is in the MVPs list
     if boss in mvps:
         # If the new status is different from the current status
-        if status != mvps[boss]:
+        if status is not None and status != mvps[boss]:
             print(f"checkforchanges {status} : {mvps[boss]}")
             # If the current status is -1 (unknown or not yet checked)
             if mvps[boss] == -1:
@@ -348,7 +161,7 @@ async def check_for_changes(boss, boss_image, status):
                 
                 # Send a message to the discord with the timestamp added
                 try:
-                    await channel_boss_occurence.send(f"{emoji_id[boss]} **{boss}** - ***Appeared*** :green_circle: *{timestamp}*")
+                    await channel.app.send(f"{emoji_id[boss]} **{boss}** - ***Appeared*** :green_circle: *{timestamp}*")
                 except Exception as e:
                     print("wew i failed connecting to discord to send appeared", flush=True)
                     print(f"An exception occurred: {str(e)}")
@@ -357,7 +170,7 @@ async def check_for_changes(boss, boss_image, status):
     # If the boss is in the MINIs list
     # Performs the same as the previous block of code
     elif boss in minis:
-        if status != minis[boss]:
+        if status is not None and status != minis[boss]:
             print(f"checkforchanges {status} : {minis[boss]}")
             if minis[boss] == -1:
                 minis[boss] = status
@@ -374,7 +187,7 @@ async def check_for_changes(boss, boss_image, status):
             elif status == 3:
                 timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
                 try:
-                    await channel_boss_occurence.send(f"{emoji_id[boss]} **{boss}** - ***Appeared*** :green_circle: *{timestamp}*")
+                    await channel.app.send(f"{emoji_id[boss]} **{boss}** - ***Appeared*** :green_circle: *{timestamp}*")
                 except Exception as e:
                     print("wew i failed connecting to discord to send appeared", flush=True)
                     print(f"An exception occurred: {str(e)}")
@@ -402,7 +215,7 @@ async def check_for_banners(filename):
                 # If a banner text is found, send a message to the Discord server
                 timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
                 try:
-                    await channel_banners.send(f"{emoji_id[banner_lookup[banner_text]]} **{banner_lookup[banner_text]}** ***will be spawning soon! Warriors, charge!*** *{timestamp}*")
+                    await channel.ann.send(f"{emoji_id[banner_lookup[banner_text]]} **{banner_lookup[banner_text]}** ***will be spawning soon! Warriors, charge!*** *{timestamp}*")
                 except Exception as e:
                     print("wew i failed connecting to discord to send banner", flush=True)
                     print(f"An exception occurred: {str(e)}")
@@ -506,7 +319,7 @@ class Button:
     # and then simulates a tap on that button
     async def find_and_tap(self, button, button_name, capture_speed):
 
-        global counter, current_screen, driver
+        global current_screen, driver
 
         # Convert the images to grayscale
         button_gray = cv2.cvtColor(button, cv2.COLOR_BGR2GRAY)
@@ -514,7 +327,7 @@ class Button:
 
         # Find the button in the big image
         result = cv2.matchTemplate(current_gray, button_gray, cv2.TM_CCOEFF_NORMED)
-        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+        _, max_val, _, max_loc = cv2.minMaxLoc(result)
 
         # Check if the button was found
         if max_val > 0.8:
@@ -538,7 +351,6 @@ class Button:
 
         # Save a screenshot of the current game state
         await save_image("current-screen.png")
-        counter = counter + 1
         current_screen = cv2.imread('current-screen.png')
 
         # Check for banners in the current screen
@@ -620,7 +432,7 @@ def is_in(location):
 
     # Find the image in the big image
     result = cv2.matchTemplate(current_gray, screen_gray, cv2.TM_CCOEFF_NORMED)
-    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+    _, max_val, _, _ = cv2.minMaxLoc(result)
 
     # Check if the image was found
     if max_val > 0.8:
@@ -641,7 +453,7 @@ def locate_boss(boss_name):
     # Find the boss in the big image
     try:
         result = cv2.matchTemplate(current_gray, screen_gray, cv2.TM_CCOEFF_NORMED)
-        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+        _, max_val, _, _ = cv2.minMaxLoc(result)
 
         # Check if the boss was found
         if max_val > 0.9:
@@ -706,7 +518,7 @@ async def go_to_mini_tab():
 
 # Function to capture battle results of a boss
 async def capture_battle_results(boss, boss_image):
-    global counter, current_screen
+    global current_screen
 
     filename = '-'.join(boss.lower().split())
     find_count = 0
@@ -773,13 +585,12 @@ async def capture_battle_results(boss, boss_image):
     # Downscale the image and save it
     downscaled_image = cv2.resize(cropped_image, (700, 242), interpolation=cv2.INTER_AREA)
     cv2.imwrite('battle-results.png', downscaled_image)
-    counter = counter + 1
 
     # Send the battle result image to the Discord server
     with open('battle-results.png', "rb") as image_file:
         timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
         try:
-            await channel_boss_deaths.send(f"{emoji_id[boss]} **{boss}** ***was slain!*** *{timestamp}*", file=discord.File(image_file))
+            await channel.dead.send(f"{emoji_id[boss]} **{boss}** ***was slain!*** *{timestamp}*", file=discord.File(image_file))
         except Exception as e:
             print("wew i failed connecting to discord to send deadpics", flush=True)
             print(f"An exception occurred: {str(e)}")
@@ -843,11 +654,10 @@ async def reset_bosses(anchor_boss):
 
 # Function to get the y coordinate of the previous boss in the list
 async def get_previous_y(boss_image, boss):
-    global counter, current_screen, driver
+    global current_screen, driver
 
-    # Save the current screen and update the counter
+    # Save the current screen
     await save_image("current-screen.png")
-    counter = counter + 1
     current_screen = cv2.imread('current-screen.png')
 
     # Convert the images to grayscale
@@ -983,36 +793,25 @@ async def scan_minis():
                 
                 previous_boss = boss
 
-# Create a Discord client with default intents
-intents = discord.Intents.default()
-
 # Create a Discord client
-client = discord.Client(intents=intents)
-
-# Set the IDs of the Discord channels to send messages to
-channel_banners_id = 1131350310284185631
-channel_boss_occurence_id = 1131350326855880734
-channel_boss_deaths_id = 1131350334908932197
+client = startClient()
 
 # Event listener for when the bot is ready
 @client.event
 async def on_ready():
-    global channel_banners, channel_boss_occurence, channel_boss_deaths, counter, current_screen, current_boss, current_boss_type, TOP_MVP, TOP_MINI
-
+    global channel, current_screen, current_boss, current_boss_type, TOP_MVP, TOP_MINI
+    
     # Find the channel to send messages to
-    channel_banners = client.get_channel(channel_banners_id)
-    channel_boss_occurence = client.get_channel(channel_boss_occurence_id)
-    channel_boss_deaths = client.get_channel(channel_boss_deaths_id)
+    channel = getChannel(client, "Test-Server")
+
+    print(channel.ann, flush=True)
 
     # Set the first boss (anchor boss) to be scanned for each type
     TOP_MVP = "Mistress"
     TOP_MINI = "Dragon Fly"
     
-    # Initialize the counter and save the current screen
-    counter = 0
+    # Save the current screen
     await save_image("current-screen.png")
-    counter = counter + 1
-    print(f"(initial) Count = {counter}", flush=True)
 
     current_screen = cv2.imread('current-screen.png')
     
