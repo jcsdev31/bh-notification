@@ -14,19 +14,13 @@ import pytesseract
 from fuzzywuzzy import fuzz
 import config
 from constants.bosses import banner_texts, banner_lookup, emoji_id, boss_status, minis, mvps
+import IMG
 
 # Establish the Appium connection and assign the driver to a global variable
 driver = establish_appium_connection()
 
-# Load status images for each boss status
-# These images are used to identify the status of a boss in the game
-longer_time_img = cv2.imread('images/boss-status/longer-time.png')
-short_time_img = cv2.imread('images/boss-status/short-time.png')
-refreshing_soon_img = cv2.imread('images/boss-status/refreshing-soon.png')
-appeared_img = cv2.imread('images/boss-status/appeared.png')
-
 # The list of all status images for easy access later
-boss_status_img = [longer_time_img, short_time_img, refreshing_soon_img, appeared_img]
+IMG_STATUS_LIST = [IMG.STATUS_LT, IMG.STATUS_ST, IMG.STATUS_RS, IMG.STATUS_APP]
 
 # Function to pre-process an image for OCR (Optical Character Recognition)
 # This function prepares an image to be used with pytesseract for extracting text from it
@@ -78,7 +72,7 @@ def check_in_image(boss):
         cropped_image = current_screen[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
 
         # Check if any of the boss status lookup images are found in the cropped image
-        for i, status in enumerate(boss_status_img):
+        for i, status in enumerate(IMG_STATUS_LIST):
 
             status_result = cv2.matchTemplate(cropped_image, status, cv2.TM_CCOEFF_NORMED)
 
@@ -135,7 +129,6 @@ async def check_for_changes(boss, boss_image, status):
     if boss in mvps:
         # If the new status is different from the current status
         if status is not None and status != mvps[boss]:
-            print(f"checkforchanges {status} : {mvps[boss]}")
             # If the current status is -1 (unknown or not yet checked)
             if mvps[boss] == -1:
                 # Update the status in the MVPs dictionary
@@ -171,7 +164,6 @@ async def check_for_changes(boss, boss_image, status):
     # Performs the same as the previous block of code
     elif boss in minis:
         if status is not None and status != minis[boss]:
-            print(f"checkforchanges {status} : {minis[boss]}")
             if minis[boss] == -1:
                 minis[boss] = status
                 print(f"{boss} = {boss_status[status]}", flush=True)
@@ -359,64 +351,49 @@ class Button:
     # The following methods are for interacting with specific buttons
     # They load the image for the button, then call find_and_tap to tap it
     async def banner_close(self):
-        button = cv2.imread('images/buttons/banner-close-button.png')
-        await self.find_and_tap(button, "banner-close-button", 0.5)
+        await self.find_and_tap(IMG.img_lookup['buttons/banner-close-button'], "banner-close-button", 0.5)
 
     async def battle_screen(self):
-        button = cv2.imread('images/buttons/battle-screen-button.png')
-        await self.find_and_tap(button, "battle-screen-button", 0.5)
+        await self.find_and_tap(IMG.img_lookup['buttons/battle-screen-button'], "battle-screen-button", 0.5)
     
     async def close(self):
-        button = cv2.imread('images/buttons/close-button.png')
-        await self.find_and_tap(button, "close-button", 0.5)
+        await self.find_and_tap(IMG.img_lookup['buttons/close-button'], "close-button", 0.5)
     
     async def mini_tab(self):
-        button = cv2.imread('images/buttons/mini-tab-button.png')
-        await self.find_and_tap(button, "mini-tab-button", 0.2)
+        await self.find_and_tap(IMG.img_lookup['buttons/mini-tab-button'], "mini-tab-button", 0.2)
 
     async def mvp_screen(self):
-        button = cv2.imread('images/buttons/mvp-screen-button.png')
-        await self.find_and_tap(button, "mvp-screen-button", 0.5)
+        await self.find_and_tap(IMG.img_lookup['buttons/mvp-screen-button'], "mvp-screen-button", 0.5)
     
     async def mvp_tab(self):
-        button = cv2.imread('images/buttons/mvp-tab-button.png')
-        await self.find_and_tap(button, "mvp-tab-button", 0.2)
+        await self.find_and_tap(IMG.img_lookup['buttons/mvp-tab-button'], "mvp-tab-button", 0.2)
 
     async def unhide_icons(self):
-        button = cv2.imread('images/buttons/unhide-icons-button.png')
-        await self.find_and_tap(button, "unhide-icons-button", 0.5)
+        await self.find_and_tap(IMG.img_lookup['buttons/unhide-icons-button'], "unhide-icons-button", 0.5)
 
     async def close_battle_results(self):
-        button = cv2.imread('images/screens/mvp-screen.png')
-        await self.find_and_tap(button, "mvp-screen", 0)
+        await self.find_and_tap(IMG.img_lookup['screens/mvp-screen'], "mvp-screen", 0)
     
     async def close_map(self):
-        button = cv2.imread('images/buttons/map-close-button.png')
-        await self.find_and_tap(button, "map-close-button", 0.5)
+        await self.find_and_tap(IMG.img_lookup['buttons/map-close-button'], "map-close-button", 0.5)
 
     async def close_kpass(self):
-        button = cv2.imread('images/buttons/kpass-close-button.png')
-        await self.find_and_tap(button, "kpass-close-button", 0.5)
+        await self.find_and_tap(IMG.img_lookup['buttons/kpass-close-button'], "kpass-close-button", 0.5)
     
     async def disconnect(self):
-        button = cv2.imread('images/buttons/disconnected-button.png')
-        await self.find_and_tap(button, "disconnected-button", 1)
+        await self.find_and_tap(IMG.img_lookup['buttons/disconnected-button'], "disconnected-button", 1)
 
     async def update(self):
-        button = cv2.imread('images/buttons/update-button.png')
-        await self.find_and_tap(button, "update-button", 1)
+        await self.find_and_tap(IMG.img_lookup['buttons/update-button'], "update-button", 1)
     
     async def open_app(self):
-        button = cv2.imread('images/buttons/home-screen-button.png')
-        await self.find_and_tap(button, "home-screen-button", 0.5)
+        await self.find_and_tap(IMG.img_lookup['buttons/home-screen-button'], "home-screen-button", 0.5)
 
     async def enter_character_select(self):
-        button = cv2.imread('images/buttons/enter-game-button.png')
-        await self.find_and_tap(button, "enter-character-select-button", 0.5)
+        await self.find_and_tap(IMG.img_lookup['buttons/enter-game-button'], "enter-game-button", 0.5)
     
     async def select_character(self):
-        button = cv2.imread('images/buttons/select-character-button.png')
-        await self.find_and_tap(button, "select-character-button", 0.5)
+        await self.find_and_tap(IMG.img_lookup['buttons/select-character-button'], "select-character-button", 0.5)
 
 # Create an instance of the Button class
 tap = Button()
@@ -424,7 +401,7 @@ tap = Button()
 # Function to check if a certain image (represented by 'location') is present in the current screen
 def is_in(location):
     # Read in the image file
-    screen = cv2.imread(f"images/{location}.png")
+    screen = IMG.img_lookup[location]
 
     # Convert the images to grayscale
     screen_gray = cv2.cvtColor(screen, cv2.COLOR_BGR2GRAY)
@@ -444,7 +421,7 @@ def is_in(location):
 def locate_boss(boss_name):
     # Read in the image file for the boss
     filename = '-'.join(boss_name.lower().split()) + ".png"
-    screen = cv2.imread(f"images/boss-sidebar/{filename}")
+    screen = IMG.img_sidebar[filename]
 
     # Convert the images to grayscale
     screen_gray = cv2.cvtColor(screen, cv2.COLOR_BGR2GRAY)
@@ -643,7 +620,7 @@ async def reset_bosses(anchor_boss):
             await swipe(y, y + 300, 100, 0)
 
         filename = '-'.join(anchor_boss.lower().split())
-        boss_image = cv2.imread(f"images/boss-sidebar/{filename}.png")
+        boss_image = IMG.img_sidebar[filename + '.png']
         while True:
             if await check_game_restarted():
                 await reset_bosses(anchor_boss)
@@ -666,7 +643,7 @@ async def get_previous_y(boss_image, boss):
 
     # Find the button in the big image
     result = cv2.matchTemplate(current_gray, button_gray, cv2.TM_CCOEFF_NORMED)
-    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+    _, max_val, _, max_loc = cv2.minMaxLoc(result)
 
     # If the boss was found, return the y coordinate
     if max_val > 0.8:
@@ -691,7 +668,7 @@ async def scan_mvps():
                     # If the boss is located
                     if locate_boss(boss):
                         filename = '-'.join(boss.lower().split()) + ".png"
-                        boss_image = cv2.imread(f"images/boss-sidebar/{filename}")
+                        boss_image = IMG.img_sidebar[filename]
                         # Check the status of the boss
                         status = check_in_image(boss_image)
                         # If the status has changed, handle it
@@ -711,7 +688,7 @@ async def scan_mvps():
 
                             # Get the y coordinate of the previous boss in the list
                             filename = '-'.join(previous_boss.lower().split()) + ".png"
-                            boss_image = cv2.imread(f"images/boss-sidebar/{filename}")
+                            boss_image = IMG.img_sidebar[filename]
                             y = await get_previous_y(boss_image, previous_boss)
                             try:
                                 # Swipe up to scroll down the list
@@ -750,7 +727,7 @@ async def scan_minis():
                 while True:
                     if locate_boss(boss):
                         filename = '-'.join(boss.lower().split()) + ".png"
-                        boss_image = cv2.imread(f"images/boss-sidebar/{filename}")
+                        boss_image = IMG.img_sidebar[filename]
                         status = check_in_image(boss_image)
                         await check_for_changes(boss, boss_image, status)
                         break
@@ -764,7 +741,7 @@ async def scan_minis():
                                 await tap.close_battle_results()
 
                             filename = '-'.join(previous_boss.lower().split()) + ".png"
-                            boss_image = cv2.imread(f"images/boss-sidebar/{filename}")
+                            boss_image = IMG.img_sidebar[filename]
 
                             y = await get_previous_y(boss_image, previous_boss)
                             try:
@@ -803,8 +780,6 @@ async def on_ready():
     
     # Find the channel to send messages to
     channel = getChannel(client, "Test-Server")
-
-    print(channel.ann, flush=True)
 
     # Set the first boss (anchor boss) to be scanned for each type
     TOP_MVP = "Mistress"
