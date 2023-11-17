@@ -2,10 +2,12 @@ import cv2
 
 # Load status images for each boss status
 # These images are used to identify the status of a boss in the game
-STATUS_LT = cv2.imread('images/boss-status/longer-time.png')
-STATUS_ST = cv2.imread('images/boss-status/short-time.png')
-STATUS_RS = cv2.imread('images/boss-status/refreshing-soon.png')
-STATUS_APP = cv2.imread('images/boss-status/appeared.png')
+img_status = {
+    'STATUS_LT': cv2.imread('images/boss-status/longer-time.png'),
+    'STATUS_ST': cv2.imread('images/boss-status/short-time.png'),
+    'STATUS_RS': cv2.imread('images/boss-status/refreshing-soon.png'),
+    'STATUS_APP': cv2.imread('images/boss-status/appeared.png'),
+}
 
 img_lookup = {
     #buttons folder
@@ -118,3 +120,11 @@ img_sidebar = {
     'toad.png': cv2.imread('images/boss-sidebar/toad.png'),
     'vagabond-wolf.png': cv2.imread('images/boss-sidebar/vagabond-wolf.png'),
 }
+
+def convert_to_grayscale(images_dict):
+    for key, img in images_dict.items():
+        images_dict[key] = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    
+convert_to_grayscale(img_status)
+convert_to_grayscale(img_lookup)
+convert_to_grayscale(img_sidebar)
