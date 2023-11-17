@@ -20,7 +20,7 @@ import IMG
 driver = establish_appium_connection()
 
 # The list of all status images for easy access later
-IMG_STATUS_LIST = [IMG.STATUS_LT, IMG.STATUS_ST, IMG.STATUS_RS, IMG.STATUS_APP]
+IMG_STATUS_LIST = [IMG.img_status['STATUS_LT'], IMG.img_status['STATUS_ST'], IMG.img_status['STATUS_RS'], IMG.img_status['STATUS_APP']]
 
 # Function to pre-process an image for OCR (Optical Character Recognition)
 # This function prepares an image to be used with pytesseract for extracting text from it
@@ -54,11 +54,10 @@ def preprocess_image(image):
 # Function to check if a small image (boss) is in a larger image (current_screen)
 def check_in_image(boss):
     # Convert the images to grayscale
-    boss_gray = cv2.cvtColor(boss, cv2.COLOR_BGR2GRAY)
     current_gray = cv2.cvtColor(current_screen, cv2.COLOR_BGR2GRAY)
 
     # Find the small image in the larger image
-    result = cv2.matchTemplate(current_gray, boss_gray, cv2.TM_CCOEFF_NORMED)
+    result = cv2.matchTemplate(current_gray, boss, cv2.TM_CCOEFF_NORMED)
     _, max_val, _, max_loc = cv2.minMaxLoc(result)
 
     # If the small image was found in the larger image
@@ -69,7 +68,7 @@ def check_in_image(boss):
         bottom_right = (top_left[0] + boss.shape[1] + 100, top_left[1] + boss.shape[0])
 
         # Crop the area around the small image
-        cropped_image = current_screen[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
+        cropped_image = current_gray[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
 
         # Check if any of the boss status lookup images are found in the cropped image
         for i, status in enumerate(IMG_STATUS_LIST):
@@ -314,11 +313,10 @@ class Button:
         global current_screen, driver
 
         # Convert the images to grayscale
-        button_gray = cv2.cvtColor(button, cv2.COLOR_BGR2GRAY)
         current_gray = cv2.cvtColor(current_screen, cv2.COLOR_BGR2GRAY)
 
         # Find the button in the big image
-        result = cv2.matchTemplate(current_gray, button_gray, cv2.TM_CCOEFF_NORMED)
+        result = cv2.matchTemplate(current_gray, button, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, max_loc = cv2.minMaxLoc(result)
 
         # Check if the button was found
@@ -404,11 +402,10 @@ def is_in(location):
     screen = IMG.img_lookup[location]
 
     # Convert the images to grayscale
-    screen_gray = cv2.cvtColor(screen, cv2.COLOR_BGR2GRAY)
     current_gray = cv2.cvtColor(current_screen, cv2.COLOR_BGR2GRAY)
 
     # Find the image in the big image
-    result = cv2.matchTemplate(current_gray, screen_gray, cv2.TM_CCOEFF_NORMED)
+    result = cv2.matchTemplate(current_gray, screen, cv2.TM_CCOEFF_NORMED)
     _, max_val, _, _ = cv2.minMaxLoc(result)
 
     # Check if the image was found
@@ -424,12 +421,11 @@ def locate_boss(boss_name):
     screen = IMG.img_sidebar[filename]
 
     # Convert the images to grayscale
-    screen_gray = cv2.cvtColor(screen, cv2.COLOR_BGR2GRAY)
     current_gray = cv2.cvtColor(current_screen, cv2.COLOR_BGR2GRAY)
 
     # Find the boss in the big image
     try:
-        result = cv2.matchTemplate(current_gray, screen_gray, cv2.TM_CCOEFF_NORMED)
+        result = cv2.matchTemplate(current_gray, screen, cv2.TM_CCOEFF_NORMED)
         _, max_val, _, _ = cv2.minMaxLoc(result)
 
         # Check if the boss was found
@@ -638,11 +634,10 @@ async def get_previous_y(boss_image, boss):
     current_screen = cv2.imread('current-screen.png')
 
     # Convert the images to grayscale
-    button_gray = cv2.cvtColor(boss_image, cv2.COLOR_BGR2GRAY)
     current_gray = cv2.cvtColor(current_screen, cv2.COLOR_BGR2GRAY)
 
     # Find the button in the big image
-    result = cv2.matchTemplate(current_gray, button_gray, cv2.TM_CCOEFF_NORMED)
+    result = cv2.matchTemplate(current_gray, boss_image, cv2.TM_CCOEFF_NORMED)
     _, max_val, _, max_loc = cv2.minMaxLoc(result)
 
     # If the boss was found, return the y coordinate
