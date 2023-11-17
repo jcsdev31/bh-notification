@@ -35,7 +35,7 @@ app_channel_list = {
     'Tome of Glory': 1128802659965620294,
     'Manila': 1128801544473677985,
     'Frenetic Land': 1128801060341948588,
-    'Test-Server': 1131350326855880734
+    'Test-Server': 1131350310284185631
 }
 
 dead_channel_list = {
@@ -46,3 +46,30 @@ dead_channel_list = {
     'Frenetic Land': 1128801081879699513,
     'Test-Server': 1131350334908932197
 }
+
+# ann_channel_list = {
+#     'Opera Phantom': 1128801882559762552,
+#     'Boulders and Horns': 1130856686882664479,
+#     'Tome of Glory': 1128802609650745424,
+#     'Manila': 1128801527969091736,
+#     'Frenetic Land': 1128800941743812718,
+#     'Test-Server': 1131350310284185631
+# }
+
+# app_channel_list = {
+#     'Opera Phantom': 1128801894542884865,
+#     'Boulders and Horns': 1130856726124576828,
+#     'Tome of Glory': 1128802659965620294,
+#     'Manila': 1128801544473677985,
+#     'Frenetic Land': 1128801060341948588,
+#     'Test-Server': 1131350326855880734
+# }
+
+# dead_channel_list = {
+#     'Opera Phantom': 1128801902478499950,
+#     'Boulders and Horns': 1130856748513771530,
+#     'Tome of Glory': 1128802668102565958,
+#     'Manila': 1128801554686820432,
+#     'Frenetic Land': 1128801081879699513,
+#     'Test-Server': 1131350334908932197
+# }

@@ -206,7 +206,7 @@ async def check_for_banners(filename):
                 # If a banner text is found, send a message to the Discord server
                 timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
                 try:
-                    await channel.ann.send(f"{emoji_id[banner_lookup[banner_text]]} **{banner_lookup[banner_text]}** ***will be spawning soon! Warriors, charge!*** *{timestamp}*")
+                    await channel.ann.send(f"{emoji_id[banner_lookup[banner_text]]} **{banner_lookup[banner_text]}** ***will be spawning soon! Warriors, charge!*** :white_circle: *{timestamp}*")
                 except Exception as e:
                     print("wew i failed connecting to discord to send banner", flush=True)
                     print(f"An exception occurred: {str(e)}")
@@ -563,7 +563,8 @@ async def capture_battle_results(boss, boss_image):
     with open('battle-results.png', "rb") as image_file:
         timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
         try:
-            await channel.dead.send(f"{emoji_id[boss]} **{boss}** ***was slain!*** *{timestamp}*", file=discord.File(image_file))
+            await channel.app.send(f"{emoji_id[boss]} **{boss}** - ***was slain!*** :red_circle: *{timestamp}*")
+            await channel.dead.send(f"{emoji_id[boss]} **{boss}** ***was slain!*** :red_circle: *{timestamp}*", file=discord.File(image_file))
         except Exception as e:
             print("wew i failed connecting to discord to send deadpics", flush=True)
             print(f"An exception occurred: {str(e)}")
