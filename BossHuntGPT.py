@@ -1,8 +1,8 @@
 # Import the necessary libraries
 import time
-from appium import webdriver
-from connections.driver_connect import establish_appium_connection
-from connections.discord_connect import startClient, getChannel, Channel
+import numpy as np
+from connections.driver_connect import establish_appium_connection, driver
+from connections.discord_connect import startClient, getChannel
 import os
 import cv2
 import random
@@ -15,9 +15,6 @@ from fuzzywuzzy import fuzz
 import config
 from constants.bosses import banner_texts, banner_lookup, emoji_id, boss_status, minis, mvps
 import IMG
-
-# Establish the Appium connection and assign the driver to a global variable
-driver = establish_appium_connection()
 
 # The list of all status images for easy access later
 IMG_STATUS_LIST = [IMG.img_status['STATUS_LT'], IMG.img_status['STATUS_ST'], IMG.img_status['STATUS_RS'], IMG.img_status['STATUS_APP']]
@@ -104,18 +101,19 @@ async def swipe(start_y, end_y, duration, capture_speed):
 
     await asyncio.sleep(capture_speed)
 
-    await save_image("current-screen.png")
-    current_screen = cv2.imread('current-screen.png')
+    await save_image()
 
-    await check_for_banners('current-screen.png')
+    await check_for_banners()
 
 # Function to save a screenshot of the current game state
-async def save_image(screenshot_filename):
-    global driver
-    screenshot_filepath = os.path.join(os.getcwd(), screenshot_filename)
-
+async def save_image():
+    global driver, current_screen
     try:
-        driver.save_screenshot(screenshot_filepath)
+        # Get the screenshot data as a PNG bytes object
+        png = driver.get_screenshot_as_png()
+
+        # Convert the bytes object to a NumPy array directly using OpenCV
+        current_screen = cv2.imdecode(np.frombuffer(png, np.uint8), cv2.IMREAD_COLOR)
     except Exception as e:
         print("wiwoweeee screenshot failed weewoo", flush=True)
         print(f"An exception occurred: {str(e)}")
@@ -185,52 +183,51 @@ async def check_for_changes(boss, boss_image, status):
                 minis[boss] = 3
 
 # Function to check for banners in the game
-async def check_for_banners(filename):
+async def check_for_banners():
 
-    # Open the screenshot
-    with Image.open(filename) as screenshot:
+    screenshot = Image.fromarray(current_screen)
+    
+    # Preprocess the image for OCR
+    image = preprocess_image(screenshot)
 
-        # Preprocess the image for OCR
-        image = preprocess_image(screenshot)
+    # Extract text from the image
+    try:
+        extracted_text = pytesseract.image_to_string(image, config="--psm 6")
+    except pytesseract.TesseractError as e:
+        extracted_text = ""
 
-        # Extract text from the image
-        try:
-            extracted_text = pytesseract.image_to_string(image, config="--psm 6")
-        except pytesseract.TesseractError as e:
-            extracted_text = ""
-
-        # Check if any of the banner texts are in the extracted text
-        for banner_text in banner_texts:
-            ratio = fuzz.partial_ratio(extracted_text, banner_text)
-            if ratio >= 85:
-                # If a banner text is found, send a message to the Discord server
-                timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
-                try:
-                    await channel.ann.send(f"{emoji_id[banner_lookup[banner_text]]} **{banner_lookup[banner_text]}** ***will be spawning soon! Warriors, charge!*** :white_circle: *{timestamp}*")
-                except Exception as e:
-                    print("wew i failed connecting to discord to send banner", flush=True)
-                    print(f"An exception occurred: {str(e)}")
-                # Tap the close button on the banner
-                banner_close_x = random.randint(710, 720)
-                banner_close_y = random.randint(96, 110)
-                driver.tap([(banner_close_x, banner_close_y)])
-                # Break out of the loop once a banner text is detected and a message is sent
-                break
-            
-            # Check for various other texts that might indicate a banner
-            ratio1 = fuzz.partial_ratio(extracted_text, 'Adventurer')
-            ratio2 = fuzz.partial_ratio(extracted_text, 'The item')
-            ratio3 = fuzz.partial_ratio(extracted_text, 'The next')
-            ratio4 = fuzz.partial_ratio(extracted_text, 'Due to')
-            ratio5 = fuzz.partial_ratio(extracted_text, 'only')
-            ratio6 = fuzz.partial_ratio(extracted_text, 'has been')
-            ratio6 = fuzz.partial_ratio(extracted_text, 'Congrat')
-            # If one of these texts is found, tap the close button on the banner
-            if ratio1 >= 90 or ratio2 >= 90 or ratio3 >= 90 or ratio4 >= 90 or ratio5 >= 90 or ratio6 >= 90:
-                banner_close_x = random.randint(710, 720)
-                banner_close_y = random.randint(96, 110)
-                driver.tap([(banner_close_x, banner_close_y)])
-                break
+    # Check if any of the banner texts are in the extracted text
+    for banner_text in banner_texts:
+        ratio = fuzz.partial_ratio(extracted_text, banner_text)
+        if ratio >= 85:
+            # If a banner text is found, send a message to the Discord server
+            timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
+            try:
+                await channel.ann.send(f"{emoji_id[banner_lookup[banner_text]]} **{banner_lookup[banner_text]}** ***will be spawning soon! Warriors, charge!*** :white_circle: *{timestamp}*")
+            except Exception as e:
+                print("wew i failed connecting to discord to send banner", flush=True)
+                print(f"An exception occurred: {str(e)}")
+            # Tap the close button on the banner
+            banner_close_x = random.randint(710, 720)
+            banner_close_y = random.randint(96, 110)
+            driver.tap([(banner_close_x, banner_close_y)])
+            # Break out of the loop once a banner text is detected and a message is sent
+            break
+        
+        # Check for various other texts that might indicate a banner
+        ratio1 = fuzz.partial_ratio(extracted_text, 'Adventurer')
+        ratio2 = fuzz.partial_ratio(extracted_text, 'The item')
+        ratio3 = fuzz.partial_ratio(extracted_text, 'The next')
+        ratio4 = fuzz.partial_ratio(extracted_text, 'Due to')
+        ratio5 = fuzz.partial_ratio(extracted_text, 'only')
+        ratio6 = fuzz.partial_ratio(extracted_text, 'has been')
+        ratio6 = fuzz.partial_ratio(extracted_text, 'Congrat')
+        # If one of these texts is found, tap the close button on the banner
+        if ratio1 >= 90 or ratio2 >= 90 or ratio3 >= 90 or ratio4 >= 90 or ratio5 >= 90 or ratio6 >= 90:
+            banner_close_x = random.randint(710, 720)
+            banner_close_y = random.randint(96, 110)
+            driver.tap([(banner_close_x, banner_close_y)])
+            break
     
     # Check if the game was interrupted
     await check_if_interrupted()
@@ -297,8 +294,7 @@ async def check_if_interrupted():
             if is_in('screens/mvp-screen'):
                 is_app_launched = True
             await asyncio.sleep(2)
-            await save_image("current-screen.png")
-            current_screen = cv2.imread('current-screen.png')
+            await save_image()
         # Reset the current boss and boss type, then start the cycle again
         current_boss = TOP_MVP
         current_boss_type = 'MVP'
@@ -340,11 +336,10 @@ class Button:
             print(f"{button_name} is not found in the image")
 
         # Save a screenshot of the current game state
-        await save_image("current-screen.png")
-        current_screen = cv2.imread('current-screen.png')
+        await save_image()
 
         # Check for banners in the current screen
-        await check_for_banners('current-screen.png')
+        await check_for_banners()
 
     # The following methods are for interacting with specific buttons
     # They load the image for the button, then call find_and_tap to tap it
@@ -457,8 +452,7 @@ async def go_to_mvp_tab():
                         await tap.close_map()
                     if is_in('screens/kingdom-pass-screen'):
                         await tap.close_kpass()
-                    await save_image("current-screen.png")
-                    current_screen = cv2.imread('current-screen.png')
+                    await save_image()
                 else: 
                     break
             await tap.mvp_screen()
@@ -480,8 +474,7 @@ async def go_to_mini_tab():
                         await tap.close_map()
                     if is_in('screens/kingdom-pass-screen'):
                         await tap.close_kpass()
-                    await save_image("current-screen.png")
-                    current_screen = cv2.imread('current-screen.png')
+                    await save_image()
                 else: 
                     break
             await tap.mvp_screen()
@@ -542,8 +535,7 @@ async def capture_battle_results(boss, boss_image):
     # Wait until the battle result screen is visible
     while True:
         await check_game_restarted()
-        await save_image("current-screen.png")
-        current_screen = cv2.imread('current-screen.png')
+        await save_image()
         if is_in(f'buttons/mvp-tab-button') or is_in(f'buttons/mini-tab-button') or is_in(f'screens/mvp-tab-screen') or is_in(f'screens/mini-tab-screen'):
             await tap.battle_screen()
         if is_in('screens/battle-result-screen'):
@@ -551,8 +543,7 @@ async def capture_battle_results(boss, boss_image):
     
     await asyncio.sleep(1)
 
-    await save_image("current-screen.png")
-    current_screen = cv2.imread('current-screen.png')
+    await save_image()
     # Crop the image to get only the part with the battle result
     cropped_image = current_screen[130:410, 80:890]
     # Downscale the image and save it
@@ -631,8 +622,7 @@ async def get_previous_y(boss_image, boss):
     global current_screen, driver
 
     # Save the current screen
-    await save_image("current-screen.png")
-    current_screen = cv2.imread('current-screen.png')
+    await save_image()
 
     # Convert the images to grayscale
     current_gray = cv2.cvtColor(current_screen, cv2.COLOR_BGR2GRAY)
@@ -782,9 +772,7 @@ async def on_ready():
     TOP_MINI = "Dragon Fly"
     
     # Save the current screen
-    await save_image("current-screen.png")
-
-    current_screen = cv2.imread('current-screen.png')
+    await save_image()
     
     # Set the current boss and boss type
     current_boss = TOP_MVP

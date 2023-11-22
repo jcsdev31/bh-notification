@@ -13,3 +13,6 @@ def establish_appium_connection():
 
     # Establish the Appium connection and return the driver object
     return webdriver.Remote("http://localhost:4723/wd/hub", desired_caps)
+
+# Establish the Appium connection and assign the driver to a global variable
+driver = establish_appium_connection()
