@@ -3,7 +3,7 @@ import time
 import numpy as np
 from connections.driver_connect import establish_appium_connection, driver
 from connections.discord_connect import startClient, getChannel
-import os
+import io
 import cv2
 import random
 import discord
@@ -13,7 +13,7 @@ from PIL import Image, ImageOps
 import pytesseract
 from fuzzywuzzy import fuzz
 import config
-from constants.bosses import banner_texts, banner_lookup, emoji_id, boss_status, minis, mvps
+from constants.bosses import banner_texts, banner_lookup, emoji_id, boss_status, minis, mvps, is_announced
 import IMG
 
 # The list of all status images for easy access later
@@ -108,12 +108,20 @@ async def swipe(start_y, end_y, duration, capture_speed):
 # Function to save a screenshot of the current game state
 async def save_image():
     global driver, current_screen
+    
+    current_screen = None
+    
     try:
+        # del current_screen
         # Get the screenshot data as a PNG bytes object
         png = driver.get_screenshot_as_png()
 
         # Convert the bytes object to a NumPy array directly using OpenCV
-        current_screen = cv2.imdecode(np.frombuffer(png, np.uint8), cv2.IMREAD_COLOR)
+        with Image.open(io.BytesIO(png)) as screenshot_image:
+            current_screen = np.array(screenshot_image)
+        
+        # Explicitly release memory
+        del png
     except Exception as e:
         print("wiwoweeee screenshot failed weewoo", flush=True)
         print(f"An exception occurred: {str(e)}")
@@ -130,22 +138,31 @@ async def check_for_changes(boss, boss_image, status):
             if mvps[boss] == -1:
                 # Update the status in the MVPs dictionary
                 mvps[boss] = status
-                print(f"{boss} = {boss_status[status]}", flush=True)
             # If the new status is 0 (longer time)
             elif status == 0:
                 # Capture the battle results, send it to discord, and update the status in the MVPs dictionary
                 await capture_battle_results(boss, boss_image)
                 mvps[boss] = 0
+                is_announced[boss] = False
             # If the new status is 1 (short time), update the status in the MVPs dictionary
             elif status == 1:
                 mvps[boss] = 1
-                print(f"{boss} = {boss_status[status]}", flush=True)
+                is_announced[boss] = False
             # If the new status is 2 (refreshing soon), update the status in the MVPs dictionary
             elif status == 2:
                 mvps[boss] = 2
-                print(f"{boss} = {boss_status[status]}", flush=True)
             # If the new status is 3 (appeared)
             elif status == 3:
+                
+                # If appeared detected without banner
+                if(is_announced[boss] == False):
+                    # Send a message to the discord that the banner wasn't detected
+                    try:
+                        await channel.app.send(f"{emoji_id[boss]} **{boss}** - ***BANNER WAS NOT DETECTED***")
+                    except Exception as e:
+                        print("wew i failed connecting to discord to send appeared", flush=True)
+                        print(f"An exception occurred: {str(e)}")
+                
                 # Get the current timestamp
                 timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
                 
@@ -156,6 +173,7 @@ async def check_for_changes(boss, boss_image, status):
                     print("wew i failed connecting to discord to send appeared", flush=True)
                     print(f"An exception occurred: {str(e)}")
                 mvps[boss] = 3
+                is_announced[boss] = False
     
     # If the boss is in the MINIs list
     # Performs the same as the previous block of code
@@ -167,13 +185,25 @@ async def check_for_changes(boss, boss_image, status):
             elif status == 0:
                 await capture_battle_results(boss, boss_image)
                 minis[boss] = 0
+                is_announced[boss] = False
             elif status == 1:
                 minis[boss] = 1
+                is_announced[boss] = False
                 print(f"{boss} = {boss_status[status]}", flush=True)
             elif status == 2:
                 minis[boss] = 2
                 print(f"{boss} = {boss_status[status]}", flush=True)
             elif status == 3:
+                
+                # If appeared detected without banner
+                if(is_announced[boss] == False):
+                    # Send a message to the discord that the banner wasn't detected
+                    try:
+                        await channel.app.send(f"{emoji_id[boss]} **{boss}** - ***BANNER WAS NOT DETECTED***")
+                    except Exception as e:
+                        print("wew i failed connecting to discord to send appeared", flush=True)
+                        print(f"An exception occurred: {str(e)}")
+                
                 timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
                 try:
                     await channel.app.send(f"{emoji_id[boss]} **{boss}** - ***Appeared*** :green_circle: *{timestamp}*")
@@ -181,6 +211,7 @@ async def check_for_changes(boss, boss_image, status):
                     print("wew i failed connecting to discord to send appeared", flush=True)
                     print(f"An exception occurred: {str(e)}")
                 minis[boss] = 3
+                is_announced[boss] = False
 
 # Function to check for banners in the game
 async def check_for_banners():
@@ -200,10 +231,19 @@ async def check_for_banners():
     for banner_text in banner_texts:
         ratio = fuzz.partial_ratio(extracted_text, banner_text)
         if ratio >= 85:
-            # If a banner text is found, send a message to the Discord server
+            # If a banner text is found, send a message to the Discord server and update the boss status
+            
+            boss_name = banner_lookup[banner_text]
+            
+            if boss_name in mvps:
+                is_announced[boss_name] = True
+            
+            if boss_name in minis:
+                is_announced[boss_name] = True
+            
             timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
             try:
-                await channel.ann.send(f"{emoji_id[banner_lookup[banner_text]]} **{banner_lookup[banner_text]}** ***will be spawning soon! Warriors, charge!*** :white_circle: *{timestamp}*")
+                await channel.ann.send(f"{emoji_id[boss_name]} **{boss_name}** ***will be spawning soon! Warriors, charge!*** :white_circle: *{timestamp}*")
             except Exception as e:
                 print("wew i failed connecting to discord to send banner", flush=True)
                 print(f"An exception occurred: {str(e)}")
