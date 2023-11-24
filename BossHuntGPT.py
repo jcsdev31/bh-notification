@@ -3,6 +3,7 @@ import time
 import numpy as np
 from connections.driver_connect import establish_appium_connection, driver
 from connections.discord_connect import startClient, getChannel
+from capture import capture_region
 import io
 import cv2
 import random
@@ -109,19 +110,8 @@ async def swipe(start_y, end_y, duration, capture_speed):
 async def save_image():
     global driver, current_screen
     
-    current_screen = None
-    
     try:
-        # del current_screen
-        # Get the screenshot data as a PNG bytes object
-        png = driver.get_screenshot_as_png()
-
-        # Convert the bytes object to a NumPy array directly using OpenCV
-        with Image.open(io.BytesIO(png)) as screenshot_image:
-            current_screen = np.array(screenshot_image)
-        
-        # Explicitly release memory
-        del png
+        current_screen = capture_region()
     except Exception as e:
         print("wiwoweeee screenshot failed weewoo", flush=True)
         print(f"An exception occurred: {str(e)}")
