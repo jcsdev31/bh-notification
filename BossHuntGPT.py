@@ -550,7 +550,7 @@ async def capture_battle_results(boss, boss_image):
                 await swipe(y, y - 150, 100, 0.5)
                 swipe_count = swipe_count + 1
                 print(f'im in capture_battle_results coming from restart and this is my loop #{swipe_count}, {boss}', flush=True)
-                if swipe_count == 10:
+                if swipe_count == 20:
                     if is_in('screens/battle-result-screen'):
                         await tap.close_battle_results()
                     print(f"I couldn't find {boss} and its loop #{swipe_count} so i am closing up again", flush=True)
