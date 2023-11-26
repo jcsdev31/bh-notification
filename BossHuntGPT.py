@@ -578,17 +578,22 @@ async def capture_battle_results(boss, boss_image):
     cropped_image = current_screen[130:410, 80:890]
     # Downscale the image and save it
     downscaled_image = cv2.resize(cropped_image, (700, 242), interpolation=cv2.INTER_AREA)
-    cv2.imwrite('battle-results.png', downscaled_image)
+    
+    # Convert the NumPy array to bytes
+    image_bytes = cv2.imencode('.png', downscaled_image)[1].tobytes()
+
+    # Create a BytesIO object and send the image
+    image_buffer = io.BytesIO(image_bytes)
 
     # Send the battle result image to the Discord server
-    with open('battle-results.png', "rb") as image_file:
-        timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
-        try:
-            await channel.app.send(f"{emoji_id[boss]} **{boss}** - ***was slain!*** :red_circle: *{timestamp}*")
-            await channel.dead.send(f"{emoji_id[boss]} **{boss}** ***was slain!*** :red_circle: *{timestamp}*", file=discord.File(image_file))
-        except Exception as e:
-            print("wew i failed connecting to discord to send deadpics", flush=True)
-            print(f"An exception occurred: {str(e)}")
+    timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
+    try:
+        await channel.app.send(f"{emoji_id[boss]} **{boss}** - ***was slain!*** :red_circle: *{timestamp}*")
+        await channel.dead.send(f"{emoji_id[boss]} **{boss}** ***was slain!*** :red_circle: *{timestamp}*", file=discord.File(image_buffer, filename="battle-results.png"))
+    except Exception as e:
+        print("wew i failed connecting to discord to send deadpics", flush=True)
+        print(f"An exception occurred: {str(e)}")
+        
     # Close the battle result screen
     while is_in('screens/battle-result-screen'):
         print(f'im in capture_battle_results and I sent battle result of {boss} to discord. I am closing now', flush=True)
