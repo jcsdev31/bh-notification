@@ -1,5 +1,7 @@
 from appium import webdriver
 
+driver = None
+
 # Function to establish Appium connection with the emulator/device
 def establish_appium_connection():
     # Set the capabilities for the Appium connection
@@ -14,5 +16,17 @@ def establish_appium_connection():
     # Establish the Appium connection and return the driver object
     return webdriver.Remote("http://localhost:4723/wd/hub", desired_caps)
 
-# Establish the Appium connection and assign the driver to a global variable
-driver = establish_appium_connection()
+def start_an_appium_session():
+    global driver
+    
+    try:
+        driver.quit()
+        print("CLOSING PREVIOUS DRIVER TO RESTART A NEW ONE")
+    except:
+        print("NO DRIVER SESSION DETECTED")
+    
+    # Establish the Appium connection and assign the driver to a global variable
+    driver = establish_appium_connection()
+    
+start_an_appium_session()
+start_an_appium_session()
