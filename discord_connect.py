@@ -1,7 +1,7 @@
 import discord
 import config
 from constants.bosses import mvps, minis, is_announced
-from BossHuntGPT import setup
+from BossHuntGPT import setup, check_for_banners
 import asyncio
 
 is_running = False
@@ -40,6 +40,8 @@ class Discord:
     guild = None
     category = None
     roles_channel = None
+    bot_announcements = None
+    bot_guide = None
     live_notifications = None
     drop_database = None
     boss_channels = {}
@@ -49,7 +51,9 @@ class Discord:
     
     async def setup_guild(self):
         await self.setup_category()
-        await self.setup_roles_channel()
+        await self.setup_roles_channel(None)
+        await self.setup_bot_announcements()
+        await self.setup_bot_guide()
         await self.setup_live_notifications()
         await self.setup_drop_database()
         
@@ -61,56 +65,139 @@ class Discord:
             await cc.channel.send("***Category not found! Creating new category ...***")
             self.category = await self.guild.create_category_channel(category_name)
         
-    async def setup_roles_channel(self):
-        roles_channel_name = "boss-roles"
+    async def setup_roles_channel(self, position):
+        roles_channel_name = "get-bh-roles"
         self.roles_channel = discord.utils.get(self.category.channels, name=roles_channel_name)
         
         if not self.roles_channel:
-            await cc.channel.send("***boss-roles not found! Creating new boss_roles ...***")
+            await cc.channel.send("***get-bh-roles not found! Creating new get-bh-roles ...***")
             overwrites = {
                 self.guild.default_role: discord.PermissionOverwrite(send_messages=False, add_reactions=False, view_channel=True),
                 self.guild.me: discord.PermissionOverwrite(send_messages=True, add_reactions=True)
             }
-            self.roles_channel = await self.category.create_text_channel(name=roles_channel_name, overwrites=overwrites)
+            if position is None:
+                self.roles_channel = await self.category.create_text_channel(name=roles_channel_name, overwrites=overwrites)
+            else:
+                self.roles_channel = await self.category.create_text_channel(name=roles_channel_name, overwrites=overwrites, position=position)
             
             await setup_roles(self.guild)
             
             # Send a message to the channel
-            message_mvp = await self.roles_channel.send("React to your preferred MVPs you want to be notified")
+            message_bot_unlock = await self.roles_channel.send('***React "<:bhbot:1180746269640114198>" to unlock the bot!***')
+            await message_bot_unlock.add_reaction("<:bhbot:1180746269640114198>")
+            
+            # Send a message to the channel
+            message_mvp = await self.roles_channel.send("React to your preferred MVP to get notified with that specific boss")
             
             for mvp in mvps:
                 # Add the reaction to the message
                 await message_mvp.add_reaction(getEmoji(mvp))
                 await asyncio.sleep(1)
                 
-            message_mini = await self.roles_channel.send("React to your preferred MINIs you want to be notified")
+            message_mini = await self.roles_channel.send("React to your preferred MINI to get notified with that specific boss")
             
             for mini in minis:
                 # Add the reaction to the message
                 await message_mini.add_reaction(getEmoji(mini))
                 await asyncio.sleep(1)
+    
+    async def setup_bot_announcements(self):
+        bot_announcements_name = "bot-announcements"
+        self.bot_announcements = discord.utils.get(self.category.channels, name=bot_announcements_name)
         
+        if not self.bot_announcements:
+            await cc.channel.send("***bot-announcements not found! Creating new bot-announcements ...***")
+            role_name = "BH Bot"
+            bh_bot_role = discord.utils.get(self.guild.roles, name=role_name)
+            overwrites = {
+                self.guild.default_role: discord.PermissionOverwrite(send_messages=False, add_reactions=False, view_channel=False),
+                bh_bot_role: discord.PermissionOverwrite(view_channel=True),
+                self.guild.me: discord.PermissionOverwrite(send_messages=True, add_reactions=True, view_channel=True)
+            }
+            self.bot_announcements = await self.category.create_text_channel(name=bot_announcements_name, overwrites=overwrites)
+        
+    async def setup_bot_guide(self):
+        bot_guide_name = "bot-guide"
+        self.bot_guide = discord.utils.get(self.category.channels, name=bot_guide_name)
+        
+        if not self.bot_guide:
+            await cc.channel.send("***bot-guide not found! Creating new bot-guide ...***")
+            role_name = "BH Bot"
+            bh_bot_role = discord.utils.get(self.guild.roles, name=role_name)
+            overwrites = {
+                self.guild.default_role: discord.PermissionOverwrite(send_messages=False, add_reactions=False, view_channel=False),
+                bh_bot_role: discord.PermissionOverwrite(view_channel=True),
+                self.guild.me: discord.PermissionOverwrite(send_messages=True, add_reactions=True, view_channel=True)
+            }
+            self.bot_guide = await self.category.create_text_channel(name=bot_guide_name, overwrites=overwrites)
+            
+        await self.bot_guide.send(""":red_circle: **= LONGER TIME**
+:orange_circle:  **= SHORT TIME**
+:yellow_circle:  **= REFRESHING SOON**
+:green_circle:  **= APPEARED**
+:star2:  **= BANNER DETECTED**
+:space_invader:  **= VOID DETECTED**""")
+        
+        roles_channel_link = self.roles_channel.jump_url
+        
+        await self.bot_guide.send(f"""***==============================***
+***== HOW TO UNLOCK THE BOT ==***
+***==============================***
+1. Go to {roles_channel_link}
+2. Click/Tap the <:bhbot:1180746269640114198> to unlock the update channels
+3. React to the MVP/MINI that you want to receive notifications from
+**NOTE:** 
+*DO NOT SPAM REACT THE BOSSES FOR THE BOT TO REGISTER YOUR ACTION. IF YOUR REACT DIDN'T GIVE YOU THE ROLE AFTER 5 SECONDS, TRY IT AGAIN*""")
+        
+        await self.bot_guide.send("""***==============================***
+***== SETUP THE NOTIFICATION ==***
+***==============================***""")
+        
+        await self.bot_guide.send(""":mobile_phone:**PHONE**:mobile_phone: 
+Long tap the server icon on the left sidebar, tap Notifications, then tap **"Only @mentions"**""")
+        
+        image_path_1 = 'bot-guide/mobile1.jpg'
+        image_path_2 = 'bot-guide/mobile2.jpg'
+        image_path_3 = 'bot-guide/pc.PNG'
+        
+        file_1 = discord.File(image_path_1)
+        file_2 = discord.File(image_path_2)
+        file_3 = discord.File(image_path_3)
+        
+        await self.bot_guide.send(files=[file_1, file_2])
+        
+        await self.bot_guide.send(""":computer: **PC** :computer:
+Right click the server icon on the left sidebar, hover over Notification Settings, click **"Only @mentions"**""")
+        
+        await self.bot_guide.send(files=[file_3])
+    
     async def setup_live_notifications(self):
         live_notifications_name = "live-notifications"
         self.live_notifications = discord.utils.get(self.category.channels, name=live_notifications_name)
         
         if not self.live_notifications:
             await cc.channel.send("***live-notifications not found! Creating new live-notifications ...***")
+            role_name = "BH Bot"
+            bh_bot_role = discord.utils.get(self.guild.roles, name=role_name)
             overwrites = {
-                self.guild.default_role: discord.PermissionOverwrite(send_messages=False, add_reactions=False, view_channel=True),
-                self.guild.me: discord.PermissionOverwrite(send_messages=True, add_reactions=True)
+                self.guild.default_role: discord.PermissionOverwrite(send_messages=False, add_reactions=False, view_channel=False),
+                bh_bot_role: discord.PermissionOverwrite(view_channel=True),
+                self.guild.me: discord.PermissionOverwrite(send_messages=True, add_reactions=True, view_channel=True)
             }
             self.live_notifications = await self.category.create_text_channel(name=live_notifications_name, overwrites=overwrites)
     
     async def setup_drop_database(self):
-        drop_database_name = "drop-database"
+        drop_database_name = "drop"
         self.drop_database = discord.utils.get(self.category.channels, name=drop_database_name)
         
         if not self.drop_database:
-            await cc.channel.send("***drop-database not found! Creating new drop-database ...***")
+            await cc.channel.send("***drop not found! Creating new drop ...***")
+            role_name = "BH Bot"
+            bh_bot_role = discord.utils.get(self.guild.roles, name=role_name)
             overwrites = {
-                self.guild.default_role: discord.PermissionOverwrite(send_messages=False, add_reactions=False, view_channel=True),
-                self.guild.me: discord.PermissionOverwrite(send_messages=True, add_reactions=True)
+                self.guild.default_role: discord.PermissionOverwrite(send_messages=False, add_reactions=False, view_channel=False),
+                bh_bot_role: discord.PermissionOverwrite(view_channel=True),
+                self.guild.me: discord.PermissionOverwrite(send_messages=True, add_reactions=True, view_channel=True)
             }
             self.drop_database = await self.category.create_text_channel(name=drop_database_name, overwrites=overwrites)
     
@@ -244,87 +331,12 @@ async def on_message(message):
                 await message.channel.send('***No active guilds!***')
             else:
                 await reset_all_roles()
+                
+        elif message.content.startswith('!send_announcement '):
+            # Extract the announcement content after the command
+            announcement_content = message.content[len('!send_announcement '):]
+            await send_announcement(announcement_content)
             
-@client.event
-async def on_raw_reaction_add(payload):
-    # Extract relevant information from the payload
-    guild_id = payload.guild_id
-    channel_id = payload.channel_id
-    message_id = payload.message_id
-    emoji = str(payload.emoji)
-    
-    # Fetch the guild, channel, and message objects
-    guild = client.get_guild(guild_id)
-    channel = guild.get_channel(channel_id)
-    message = await channel.fetch_message(message_id)
-    member = payload.member
-
-    # Get the content of the message
-    message_content = message.content
-    
-    # Check if the reaction is added to the correct message and by a non-bot user
-    if message_content == "React to your preferred MVPs you want to be notified" and not member.bot:
-        
-        for mvp in mvps:
-            if emoji == getEmoji(mvp):
-                # Replace 'ROLE_NAME' with the actual role name you want to assign
-                role = discord.utils.get(guild.roles, name=mvp)
-
-                # Add the role to the member
-                await member.add_roles(role)
-                print(f"Added {mvp} role to {member.display_name}")
-                
-    if message_content == "React to your preferred MINIs you want to be notified" and not member.bot:
-        
-        for mini in minis:
-            if emoji == getEmoji(mini):
-                # Replace 'ROLE_NAME' with the actual role name you want to assign
-                role = discord.utils.get(guild.roles, name=mini)
-
-                # Add the role to the member
-                await member.add_roles(role)
-                print(f"Added {mini} role to {member.display_name}")
-
-@client.event
-async def on_raw_reaction_remove(payload):
-    # Extract relevant information from the payload
-    guild_id = payload.guild_id
-    channel_id = payload.channel_id
-    message_id = payload.message_id
-    emoji = str(payload.emoji)
-    
-    # Fetch the guild, channel, and message objects
-    guild = client.get_guild(guild_id)
-    channel = guild.get_channel(channel_id)
-    message = await channel.fetch_message(message_id)
-    member = await guild.fetch_member(payload.user_id)
-
-    # Get the content of the message
-    message_content = message.content
-    
-    # Check if the reaction is added to the correct message and by a non-bot member
-    if message_content == "React to your preferred MVPs you want to be notified" and not member.bot:
-        
-        for mvp in mvps:
-            if emoji == getEmoji(mvp):
-                # Replace 'ROLE_NAME' with the actual role name you want to assign
-                role = discord.utils.get(guild.roles, name=mvp)
-
-                # Add the role to the member
-                await member.remove_roles(role)
-                print(f"Removed {mvp} role from {member.display_name}")
-                
-    if message_content == "React to your preferred MINIs you want to be notified" and not member.bot:
-        
-        for mini in minis:
-            if emoji == getEmoji(mini):
-                # Replace 'ROLE_NAME' with the actual role name you want to assign
-                role = discord.utils.get(guild.roles, name=mini)
-
-                # Add the role to the member
-                await member.remove_roles(role)
-                print(f"Removed {mini} role from {member.display_name}")
-        
 # Returns a pre-formatted emoji_id
 def getEmoji(boss_name):
     formatted_string = boss_name.lower().replace(" ", "")
@@ -343,6 +355,17 @@ def is_this_instance():
         return False
 
 async def setup_roles(guild):
+   
+    role_name = "BH Bot"
+    existing_role = discord.utils.get(guild.roles, name=role_name)
+   
+    if existing_role is None:
+        # Role doesn't exist, create it
+        new_role = await guild.create_role(name=role_name, permissions=discord.Permissions(0))
+        print(f'Created role: {new_role.name}')
+        await asyncio.sleep(1)
+    else:
+        print(f'Role {existing_role.name} already exists')
    
     for boss in bosses:
         role_name = boss
@@ -376,16 +399,29 @@ async def delete_role(boss):
 async def reset_all_roles():
     for guild in active_guilds:
         
-        roles_channel_name = "boss-roles"
+        roles_channel_name = "get-bh-roles"
         roles_channel = discord.utils.get(guild.category.channels, name=roles_channel_name)
         
         if roles_channel:
             await roles_channel.delete()
-            await cc.channel.send(f"***The roles-channel has been deleted for {guild.guild.name}!***")
+            position = roles_channel.position
+            await cc.channel.send(f"***The get-bh-roles has been deleted for {guild.guild.name}!***")
         else:
-            await cc.channel.send(f"***boss-roles not found! No channel to delete {guild.guild.name}***")
+            await cc.channel.send(f"***get-bh-roles not found! No channel to delete {guild.guild.name}***")
             
-        await guild.setup_roles_channel()
+        for boss in bosses:
+            role_name = boss
+            
+            # Check if the role already exists
+            existing_role = discord.utils.get(guild.guild.roles, name=role_name)
+            
+            if existing_role:
+                await existing_role.delete()
+                print(f"***The role {boss} has been deleted for {guild.guild.name}!***")
+            else:
+                print(f"***Role {boss} does not exist in {guild.guild.name}***")
+            
+        await guild.setup_roles_channel(position)
             
 async def send_error(error_report, e):
     await cc.channel.send(f"{cc.admin_id} ⚠️⚠️ ***{instance_id} ran into an error:*** *{error_report}* ⚠️⚠️")
@@ -414,8 +450,14 @@ async def send_error_image(message, image):
         if not sent:
             print("Max retries reached. Message could not be sent.")
             
-async def send_message(message):
+async def send_message(message, boss):    
     for guild in active_guilds:
+        
+        role_name = boss
+        
+        # Check if the role already exists
+        role = discord.utils.get(guild.guild.roles, name=role_name)
+        msg = f"{getEmoji(boss)} {role.mention} {message}"
         
         max_retries = 3
         retry_interval = 5
@@ -423,7 +465,7 @@ async def send_message(message):
         sent = False
         while retries < max_retries and not sent:
             try:
-                await guild.live_notifications.send(message)
+                await guild.live_notifications.send(msg)
                 sent = True
             except discord.errors.HTTPException as e:
                 print(f"Error encountered while trying to send a message: {e}")
@@ -433,24 +475,83 @@ async def send_message(message):
         
         if not sent:
             print("Max retries reached. Message could not be sent.")
-    
-async def send_image(message, image):
+
+async def send_haze(message):
     for guild in active_guilds:
         
         max_retries = 3
         retry_interval = 5
         retries = 0
         sent = False
+        
+        role_name = "BH Bot"
+        
+        # Check if the role already exists
+        role = discord.utils.get(guild.guild.roles, name=role_name)
+        
         while retries < max_retries and not sent:
             try:
-                image.seek(0)
-                await guild.drop_database.send(message, file=discord.File(image, filename="battle-results.png"))
+                await guild.live_notifications.send(f"{role.mention} {message}")
                 sent = True
             except discord.errors.HTTPException as e:
                 print(f"Error encountered while trying to send a message: {e}")
                 retries += 1
                 print(f"Retrying ({retries}/{max_retries}) in {retry_interval} seconds...")
                 await asyncio.sleep(retry_interval)
+        
+        if not sent:
+            print("Max retries reached. Message could not be sent.")
+            
+async def send_dead(guild, message):
+    max_retries = 3
+    retry_interval = 5
+    retries = 0
+    sent = False
+    while retries < max_retries and not sent:
+        try:
+            await guild.live_notifications.send(message)
+            sent = True
+        except discord.errors.HTTPException as e:
+            print(f"Error encountered while trying to send a message: {e}")
+            retries += 1
+            print(f"Retrying ({retries}/{max_retries}) in {retry_interval} seconds...")
+            await asyncio.sleep(retry_interval)
+    
+    if not sent:
+        print("Max retries reached. Message could not be sent.")
+    
+async def send_image(message, boss, image):
+    for guild in active_guilds:
+        
+        role_name = boss
+        
+        # Check if the role already exists
+        role = discord.utils.get(guild.guild.roles, name=role_name)
+        msg = f"{getEmoji(boss)} {role.mention} {message}"
+        
+        max_retries = 3
+        retry_interval = 5
+        retries = 0
+        sent = False
+        message_link = None
+        while retries < max_retries and not sent:
+            try:
+                image.seek(0)
+                temp_msg = f"{getEmoji(boss)} **{boss}** {message}"
+                res = await guild.drop_database.send(temp_msg, file=discord.File(image, filename="battle-results.png"))
+                message_link = res.jump_url
+                sent = True
+            except discord.errors.HTTPException as e:
+                print(f"Error encountered while trying to send a message: {e}")
+                retries += 1
+                print(f"Retrying ({retries}/{max_retries}) in {retry_interval} seconds...")
+                await asyncio.sleep(retry_interval)
+        
+        await check_for_banners()
+        
+        if sent:
+            msg = f"{msg} {message_link}"
+            await send_dead(guild, msg)
         
         if not sent:
             print("Max retries reached. Message could not be sent.")
@@ -474,6 +575,11 @@ async def update_status(boss, status, is_announced):
     for guild in active_guilds:
         is_update = False
         
+        role_name = boss
+        
+        # Check if the role already exists
+        role = discord.utils.get(guild.guild.roles, name=role_name)
+        
         for i in range(4):
             channel_name = f"{get_status_emoji(i)}{boss}"
             channel = discord.utils.get(guild.guild.channels, name=channel_name)
@@ -492,7 +598,8 @@ async def update_status(boss, status, is_announced):
         
         # Define the permissions
         overwrites = {
-            guild.guild.default_role: discord.PermissionOverwrite(view_channel=True, connect=False),
+            guild.guild.default_role: discord.PermissionOverwrite(view_channel=False, connect=False),
+            role: discord.PermissionOverwrite(view_channel=True),
             guild.guild.me: discord.PermissionOverwrite(view_channel=True, manage_channels=True, connect=True)
         }
             
@@ -548,5 +655,12 @@ async def alert_shutdown():
     await cc.channel.send('***Bot is done cleaning up!***')
     is_restart = True
 
-client.run(config.BOT_TOKEN)
+async def send_announcement(message):
+    for guild in active_guilds:
+        role_name = "BH Bot"
+        
+        # Check if the role already exists
+        role = discord.utils.get(guild.guild.roles, name=role_name)
+        await guild.bot_announcements.send(f"{role.mention} {message}")
 
+client.run(config.BOT_TOKEN)

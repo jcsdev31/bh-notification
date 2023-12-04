@@ -138,15 +138,16 @@ async def check_for_changes(boss, boss_image, status):
                 # If appeared detected without banner
                 if(is_announced[boss] == False):
                     # Send a message to the discord that the banner wasn't detected
-                    message = f"{dc.getEmoji(boss)} **{boss}** - ***BANNER WAS NOT DETECTED***"
-                    await dc.send_message(message)
+                    message = "***BANNER WAS NOT DETECTED***"
+                    await dc.send_message(message, boss)
+                    message = f"{dc.getEmoji(boss)} {boss} - ***BANNER WAS NOT DETECTED***"
                     await dc.send_error(message, "banner-not-found")
                 
                 # Get the current timestamp
                 timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
                 
-                message = f"{dc.getEmoji(boss)} **{boss}** - ***Appeared*** 🟢 *{timestamp}*"
-                await dc.send_message(message)
+                message = f"***Appeared*** 🟢 *{timestamp}*"
+                await dc.send_message(message, boss)
                 await check_for_banners()
                 mvps[boss] = 3
                 is_announced[boss] = False
@@ -176,15 +177,16 @@ async def check_for_changes(boss, boss_image, status):
                 # If appeared detected without banner
                 if(is_announced[boss] == False):
                     # Send a message to the discord that the banner wasn't detected
-                    message = f"{dc.getEmoji(boss)} **{boss}** - ***BANNER WAS NOT DETECTED***"
-                    await dc.send_message(message)
+                    message = "***BANNER WAS NOT DETECTED***"
+                    await dc.send_message(message, boss)
+                    message = f"{dc.getEmoji(boss)} {boss} - ***BANNER WAS NOT DETECTED***"
                     await dc.send_error(message, "banner-not-found")
                 
                 # Get the current timestamp
                 timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
                 
-                message = f"{dc.getEmoji(boss)} **{boss}** - ***Appeared*** 🟢 *{timestamp}*"
-                await dc.send_message(message)
+                message = f"***Appeared*** 🟢 *{timestamp}*"
+                await dc.send_message(message, boss)
                 
                 minis[boss] = 3
                 is_announced[boss] = False
@@ -223,8 +225,8 @@ async def check_for_banners():
             
             timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
             
-            message = f"{dc.getEmoji(boss_name)} **{boss_name}** ***will be spawning soon! Warriors, charge!*** ⚪ *{timestamp}*"
-            await dc.send_message(message)
+            message = f"***will be spawning soon! Warriors, charge!*** ⚪ *{timestamp}*"
+            await dc.send_message(message, boss_name)
             await dc.update_status(boss_name, 2, is_announced[boss_name])
 
             # Tap the close button on the banner
@@ -259,7 +261,7 @@ async def check_for_banners():
                 timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
                 
                 message = f"***Haze(Void) Weather has been detected!!!*** :space_invader: *{timestamp}*"
-                await dc.send_message(message)
+                await dc.send_haze(message)
 
             break
     
@@ -601,10 +603,9 @@ async def capture_battle_results(boss, boss_image):
     # Send the battle result image to the Discord server
     timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
     
-    message = f"{dc.getEmoji(boss)} **{boss}** - ***was slain!*** 🔴 *{timestamp}*"
-    await dc.send_message(message)
+    message = f"***was slain!*** 🔴 *{timestamp}*"
+    await dc.send_image(message, boss, image_buffer)
     await check_for_banners()
-    await dc.send_image(message, image_buffer)
         
     # Close the battle result screen
     while is_in('screens/battle-result-screen'):
