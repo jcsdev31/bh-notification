@@ -1,5 +1,6 @@
 from appium import webdriver
 import discord_connect as dc
+import waitlist as wl
 
 driver = None
 
@@ -31,7 +32,8 @@ async def start_appium_session(udid):
         driver = establish_appium_connection(udid)
     except Exception as e:
         dc.set_is_running(False)
-        await dc.send_error("Cannot connect to a driver!", e)
+        await wl.set_error_waitlist("Cannot connect to a driver!", str(e))
+        await wl.set_type_waitlist("error")
         await dc.alert_shutdown()
         
     return driver

@@ -1,13 +1,9 @@
 import discord
 import config
 from constants.bosses import mvps, minis, is_announced
-from BossHuntGPT import setup, check_for_banners
+from BossHuntGPT import setup
 import asyncio
-
-is_running = False
-instance_id = "Tome_of_Glory"
-instance_udid = None
-is_restart = False
+import waitlist as wl
 
 # Function to get the emoji based on the status
 def get_status_emoji(status):
@@ -131,16 +127,16 @@ class Discord:
             }
             self.bot_guide = await self.category.create_text_channel(name=bot_guide_name, overwrites=overwrites)
             
-        await self.bot_guide.send(""":red_circle: **= LONGER TIME**
+            await self.bot_guide.send(""":red_circle: **= LONGER TIME**
 :orange_circle:  **= SHORT TIME**
 :yellow_circle:  **= REFRESHING SOON**
 :green_circle:  **= APPEARED**
 :star2:  **= BANNER DETECTED**
 :space_invader:  **= VOID DETECTED**""")
         
-        roles_channel_link = self.roles_channel.jump_url
+            roles_channel_link = self.roles_channel.jump_url
         
-        await self.bot_guide.send(f"""***==============================***
+            await self.bot_guide.send(f"""***==============================***
 ***== HOW TO UNLOCK THE BOT ==***
 ***==============================***
 1. Go to {roles_channel_link}
@@ -149,27 +145,27 @@ class Discord:
 **NOTE:** 
 *DO NOT SPAM REACT THE BOSSES FOR THE BOT TO REGISTER YOUR ACTION. IF YOUR REACT DIDN'T GIVE YOU THE ROLE AFTER 5 SECONDS, TRY IT AGAIN*""")
         
-        await self.bot_guide.send("""***==============================***
+            await self.bot_guide.send("""***==============================***
 ***== SETUP THE NOTIFICATION ==***
 ***==============================***""")
         
-        await self.bot_guide.send(""":mobile_phone:**PHONE**:mobile_phone: 
+            await self.bot_guide.send(""":mobile_phone:**PHONE**:mobile_phone: 
 Long tap the server icon on the left sidebar, tap Notifications, then tap **"Only @mentions"**""")
         
-        image_path_1 = 'bot-guide/mobile1.jpg'
-        image_path_2 = 'bot-guide/mobile2.jpg'
-        image_path_3 = 'bot-guide/pc.PNG'
-        
-        file_1 = discord.File(image_path_1)
-        file_2 = discord.File(image_path_2)
-        file_3 = discord.File(image_path_3)
-        
-        await self.bot_guide.send(files=[file_1, file_2])
-        
-        await self.bot_guide.send(""":computer: **PC** :computer:
+            image_path_1 = 'bot-guide/mobile1.jpg'
+            image_path_2 = 'bot-guide/mobile2.jpg'
+            image_path_3 = 'bot-guide/pc.PNG'
+            
+            file_1 = discord.File(image_path_1)
+            file_2 = discord.File(image_path_2)
+            file_3 = discord.File(image_path_3)
+            
+            await self.bot_guide.send(files=[file_1, file_2])
+            
+            await self.bot_guide.send(""":computer: **PC** :computer:
 Right click the server icon on the left sidebar, hover over Notification Settings, click **"Only @mentions"**""")
         
-        await self.bot_guide.send(files=[file_3])
+            await self.bot_guide.send(files=[file_3])
     
     async def setup_live_notifications(self):
         live_notifications_name = "live-notifications"
@@ -221,42 +217,44 @@ async def on_ready():
     cc = CommandCenter()
     active_guilds = []
         
-    await cc.channel.send(f"***Instance {instance_id} has connected! Awaiting commands...***")
+    await cc.channel.send(f"***Instance {wl.instance_id} has connected! Awaiting commands...***")
 
 @client.event
 async def on_message(message):
-    global cc, instance_udid, is_restart
+    global cc
     
     if message.content.startswith('!set_active_instance'):
         new_instance = message.content.split(' ')[1]
         if cc.active_instance == new_instance:
-            await message.channel.send(f'***Instance {instance_id} is already active!***')
+            await message.channel.send(f'***Instance {wl.instance_id} is already active!***')
         else: 
             cc.active_instance = new_instance
         
             if is_this_instance():
-                await message.channel.send(f'***Instance {instance_id} is now active!***')
+                wl.clear_active_guilds()
+                await message.channel.send(f'***Instance {wl.instance_id} is now active!***')
     
     # CHECK IF COMMAND_CENTER IS DIRECTED TO THIS INSTANCE
     if is_this_instance():
         # print(f"Received message: {message.content}")
-        global is_running, active_guilds
+        global active_guilds
         if message.author == client.user:
             return
 
         if message.content.startswith('!start_instance'):
-            if not instance_udid:
+            if not wl.instance_udid:
                 await message.channel.send('***Instance UDID not set!***')
             elif not active_guilds:
                 await message.channel.send('***No active guilds to send updates to!***')
             else:
-                if not is_running:
-                    is_running = True
+                if not wl.is_running:
+                    wl.clear_all_json()
+                    wl.is_running = True
                     await message.channel.send('***Starting the infinite loop...***')
                     for obj in active_guilds:
                         await obj.live_notifications.send("***Boss Hunt Assistant initializing ...***")
                     await clean_channels()
-                    if is_restart:
+                    if wl.is_restart:
                         await setup_dc_sidebar()
                     await message.channel.send('***Bot is done setting up!***')
                     await setup()
@@ -264,8 +262,8 @@ async def on_message(message):
                     await message.channel.send('***The loop is already running.***')
 
         elif message.content.startswith('!stop_instance'):
-            if is_running:
-                is_running = False
+            if wl.is_running:
+                wl.is_running = False
                 await alert_shutdown()
             else:
                 await message.channel.send('***The loop is not currently running.***')
@@ -282,6 +280,7 @@ async def on_message(message):
                     is_already_active = True
             
             if not is_already_active:
+                await wl.set_active_guild(guild_id)
                 active_guilds.append(active_guild)
                 await cc.channel.send(f"***{active_guild.guild.name} (ID: {active_guild.guild.id}) has been set as an active guild!***")
             
@@ -307,17 +306,17 @@ async def on_message(message):
                 await cc.channel.send(f"***Bot is a member of guild: {guild.name} (ID: {guild.id})***")
         
         elif message.content.startswith('!get_active_instance'):
-            await cc.channel.send(f"***Active Instance: Instance {instance_id}***")
+            await cc.channel.send(f"***Active Instance: Instance {wl.instance_id}***")
             
         elif message.content.startswith('!set_instance_udid'):
-            instance_udid = message.content.split(' ')[1]
-            await cc.channel.send(f"***Instance UDID set to: {instance_udid}***")
+            wl.instance_udid = message.content.split(' ')[1]
+            await cc.channel.send(f"***Instance UDID set to: {wl.instance_udid}***")
         
         elif message.content.startswith('!get_instance_udid'):
-            if not instance_udid:
+            if not wl.instance_udid:
                 await cc.channel.send(f"***Instance UDID not set!***")
             else:
-                await cc.channel.send(f"***Instance UDID: {instance_udid}***")
+                await cc.channel.send(f"***Instance UDID: {wl.instance_udid}***")
         
         elif message.content.startswith('!delete_role'):
             if not active_guilds:
@@ -349,16 +348,16 @@ def getEmoji(boss_name):
     
 # Check if the commands comming from the command center is directed to this instance
 def is_this_instance():
-    if cc.active_instance and cc.active_instance == instance_id:
+    if cc.active_instance and cc.active_instance == wl.instance_id:
         return True
     else:
         return False
 
 async def setup_roles(guild):
-   
+
     role_name = "BH Bot"
     existing_role = discord.utils.get(guild.roles, name=role_name)
-   
+
     if existing_role is None:
         # Role doesn't exist, create it
         new_role = await guild.create_role(name=role_name, permissions=discord.Permissions(0))
@@ -366,10 +365,10 @@ async def setup_roles(guild):
         await asyncio.sleep(1)
     else:
         print(f'Role {existing_role.name} already exists')
-   
+
     for boss in bosses:
         role_name = boss
-        
+
         # Check if the role already exists
         existing_role = discord.utils.get(guild.roles, name=role_name)
         
@@ -422,139 +421,6 @@ async def reset_all_roles():
                 print(f"***Role {boss} does not exist in {guild.guild.name}***")
             
         await guild.setup_roles_channel(position)
-            
-async def send_error(error_report, e):
-    await cc.channel.send(f"{cc.admin_id} ⚠️⚠️ ***{instance_id} ran into an error:*** *{error_report}* ⚠️⚠️")
-    if e == "banner-not-found":
-        print(error_report)
-    else:
-        print(str(e))
-
-async def send_error_image(message, image):
-        max_retries = 3
-        retry_interval = 5
-        retries = 0
-        sent = False
-        while retries < max_retries and not sent:
-            try:
-                image.seek(0)
-                await cc.channel.send(message, file=discord.File(image, filename="battle-results.png"))
-                print("Message sent successfully.")
-                sent = True
-            except discord.errors.HTTPException as e:
-                print(f"Error encountered while trying to send a message: {e}")
-                retries += 1
-                print(f"Retrying ({retries}/{max_retries}) in {retry_interval} seconds...")
-                await asyncio.sleep(retry_interval)
-        
-        if not sent:
-            print("Max retries reached. Message could not be sent.")
-            
-async def send_message(message, boss):    
-    for guild in active_guilds:
-        
-        role_name = boss
-        
-        # Check if the role already exists
-        role = discord.utils.get(guild.guild.roles, name=role_name)
-        msg = f"{getEmoji(boss)} {role.mention} {message}"
-        
-        max_retries = 3
-        retry_interval = 5
-        retries = 0
-        sent = False
-        while retries < max_retries and not sent:
-            try:
-                await guild.live_notifications.send(msg)
-                sent = True
-            except discord.errors.HTTPException as e:
-                print(f"Error encountered while trying to send a message: {e}")
-                retries += 1
-                print(f"Retrying ({retries}/{max_retries}) in {retry_interval} seconds...")
-                await asyncio.sleep(retry_interval)
-        
-        if not sent:
-            print("Max retries reached. Message could not be sent.")
-
-async def send_haze(message):
-    for guild in active_guilds:
-        
-        max_retries = 3
-        retry_interval = 5
-        retries = 0
-        sent = False
-        
-        role_name = "BH Bot"
-        
-        # Check if the role already exists
-        role = discord.utils.get(guild.guild.roles, name=role_name)
-        
-        while retries < max_retries and not sent:
-            try:
-                await guild.live_notifications.send(f"{role.mention} {message}")
-                sent = True
-            except discord.errors.HTTPException as e:
-                print(f"Error encountered while trying to send a message: {e}")
-                retries += 1
-                print(f"Retrying ({retries}/{max_retries}) in {retry_interval} seconds...")
-                await asyncio.sleep(retry_interval)
-        
-        if not sent:
-            print("Max retries reached. Message could not be sent.")
-            
-async def send_dead(guild, message):
-    max_retries = 3
-    retry_interval = 5
-    retries = 0
-    sent = False
-    while retries < max_retries and not sent:
-        try:
-            await guild.live_notifications.send(message)
-            sent = True
-        except discord.errors.HTTPException as e:
-            print(f"Error encountered while trying to send a message: {e}")
-            retries += 1
-            print(f"Retrying ({retries}/{max_retries}) in {retry_interval} seconds...")
-            await asyncio.sleep(retry_interval)
-    
-    if not sent:
-        print("Max retries reached. Message could not be sent.")
-    
-async def send_image(message, boss, image):
-    for guild in active_guilds:
-        
-        role_name = boss
-        
-        # Check if the role already exists
-        role = discord.utils.get(guild.guild.roles, name=role_name)
-        msg = f"{getEmoji(boss)} {role.mention} {message}"
-        
-        max_retries = 3
-        retry_interval = 5
-        retries = 0
-        sent = False
-        message_link = None
-        while retries < max_retries and not sent:
-            try:
-                image.seek(0)
-                temp_msg = f"{getEmoji(boss)} **{boss}** {message}"
-                res = await guild.drop_database.send(temp_msg, file=discord.File(image, filename="battle-results.png"))
-                message_link = res.jump_url
-                sent = True
-            except discord.errors.HTTPException as e:
-                print(f"Error encountered while trying to send a message: {e}")
-                retries += 1
-                print(f"Retrying ({retries}/{max_retries}) in {retry_interval} seconds...")
-                await asyncio.sleep(retry_interval)
-        
-        await check_for_banners()
-        
-        if sent:
-            msg = f"{msg} {message_link}"
-            await send_dead(guild, msg)
-        
-        if not sent:
-            print("Max retries reached. Message could not be sent.")
             
 async def clean_channels():
     for guild in active_guilds:
@@ -642,18 +508,16 @@ async def setup_dc_sidebar():
             await update_status(boss, status, is_announced[boss])
 
 def set_is_running(new):
-    global is_running
-    is_running = new
+    wl.is_running = new
     
 async def alert_shutdown():
-    global is_restart
     
     await cc.channel.send('***Stopping the infinite loop...***')
     for obj in active_guilds:
         await obj.live_notifications.send("***Boss Hunt Assistant turning off ...***")
     await clean_channels()
     await cc.channel.send('***Bot is done cleaning up!***')
-    is_restart = True
+    wl.is_restart = True
 
 async def send_announcement(message):
     for guild in active_guilds:

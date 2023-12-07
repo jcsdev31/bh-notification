@@ -2,6 +2,7 @@
 import time
 import discord_connect as dc
 from driver_connect import start_appium_session
+import waitlist as wl
 from capture import capture_region
 import io
 import cv2
@@ -103,7 +104,8 @@ async def save_image():
     try:
         current_screen = capture_region()
     except Exception as e:
-        await dc.send_error("Screenshot failed!", e)
+        await wl.set_error_waitlist("Screenshot failed!", str(e))
+        await wl.set_type_waitlist("error")        
 
 # Function to check for changes in the status of a boss
 async def check_for_changes(boss, boss_image, status):
@@ -113,7 +115,9 @@ async def check_for_changes(boss, boss_image, status):
         if status is not None and status != mvps[boss]:
             # If the current status is -1 (unknown or not yet checked)
             if mvps[boss] == -1:
-                await dc.update_status(boss, status, is_announced[boss])
+                await wl.set_status_waitlist(boss, status, is_announced[boss])
+                await wl.set_type_waitlist("update")
+                
                 # Update the status in the MVPs dictionary
                 mvps[boss] = status
             # If the new status is 0 (longer time)
@@ -122,16 +126,22 @@ async def check_for_changes(boss, boss_image, status):
                 await capture_battle_results(boss, boss_image)
                 mvps[boss] = 0
                 is_announced[boss] = False
-                await dc.update_status(boss, status, is_announced[boss])
+                await wl.set_status_waitlist(boss, status, is_announced[boss])
+                await wl.set_type_waitlist("update")
+                
             # If the new status is 1 (short time), update the status in the MVPs dictionary
             elif status == 1:
                 mvps[boss] = 1
                 is_announced[boss] = False
-                await dc.update_status(boss, status, is_announced[boss])
+                await wl.set_status_waitlist(boss, status, is_announced[boss])
+                await wl.set_type_waitlist("update")
+                
             # If the new status is 2 (refreshing soon), update the status in the MVPs dictionary
             elif status == 2:
                 mvps[boss] = 2
-                await dc.update_status(boss, status, is_announced[boss])
+                await wl.set_status_waitlist(boss, status, is_announced[boss])
+                await wl.set_type_waitlist("update")
+                
             # If the new status is 3 (appeared)
             elif status == 3:
                 
@@ -139,58 +149,77 @@ async def check_for_changes(boss, boss_image, status):
                 if(is_announced[boss] == False):
                     # Send a message to the discord that the banner wasn't detected
                     message = "***BANNER WAS NOT DETECTED***"
-                    await dc.send_message(message, boss)
+                    await wl.set_message_waitlist(message, boss)
+                    await wl.set_type_waitlist("message")
+
                     message = f"{dc.getEmoji(boss)} {boss} - ***BANNER WAS NOT DETECTED***"
-                    await dc.send_error(message, "banner-not-found")
+                    await wl.set_error_waitlist(message, "banner-not-found")
+                    await wl.set_type_waitlist("error")
                 
                 # Get the current timestamp
                 timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
                 
                 message = f"***Appeared*** 🟢 *{timestamp}*"
-                await dc.send_message(message, boss)
+                await wl.set_message_waitlist(message, boss)
+                await wl.set_type_waitlist("message")
+
                 await check_for_banners()
                 mvps[boss] = 3
                 is_announced[boss] = False
-                await dc.update_status(boss, status, is_announced[boss])
-    
+                await wl.set_status_waitlist(boss, status, is_announced[boss])
+                await wl.set_type_waitlist("update")
+                
     # If the boss is in the MINIs list
     # Performs the same as the previous block of code
     elif boss in minis:
         if status is not None and status != minis[boss]:
             if minis[boss] == -1:
-                await dc.update_status(boss, status, is_announced[boss])
+                await wl.set_status_waitlist(boss, status, is_announced[boss])
+                await wl.set_type_waitlist("update")
+                
                 minis[boss] = status
             elif status == 0:
                 await capture_battle_results(boss, boss_image)
                 minis[boss] = 0
                 is_announced[boss] = False
-                await dc.update_status(boss, status, is_announced[boss])
+                await wl.set_status_waitlist(boss, status, is_announced[boss])
+                await wl.set_type_waitlist("update")
+                
             elif status == 1:
                 minis[boss] = 1
                 is_announced[boss] = False
-                await dc.update_status(boss, status, is_announced[boss])
+                await wl.set_status_waitlist(boss, status, is_announced[boss])
+                await wl.set_type_waitlist("update")
+                
             elif status == 2:
                 minis[boss] = 2
-                await dc.update_status(boss, status, is_announced[boss])
+                await wl.set_status_waitlist(boss, status, is_announced[boss])
+                await wl.set_type_waitlist("update")
+                
             elif status == 3:
                 
                 # If appeared detected without banner
                 if(is_announced[boss] == False):
                     # Send a message to the discord that the banner wasn't detected
                     message = "***BANNER WAS NOT DETECTED***"
-                    await dc.send_message(message, boss)
+                    await wl.set_message_waitlist(message, boss)
+                    await wl.set_type_waitlist("message")
+
                     message = f"{dc.getEmoji(boss)} {boss} - ***BANNER WAS NOT DETECTED***"
-                    await dc.send_error(message, "banner-not-found")
+                    await wl.set_error_waitlist(message, "banner-not-found")
+                    await wl.set_type_waitlist("error")
                 
                 # Get the current timestamp
                 timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
                 
                 message = f"***Appeared*** 🟢 *{timestamp}*"
-                await dc.send_message(message, boss)
+                await wl.set_message_waitlist(message, boss)
+                await wl.set_type_waitlist("message")
                 
                 minis[boss] = 3
                 is_announced[boss] = False
-                await dc.update_status(boss, status, is_announced[boss])
+                await wl.set_status_waitlist(boss, status, is_announced[boss])
+                await wl.set_type_waitlist("update")
 
 # Function to check for banners in the game
 async def check_for_banners():
@@ -205,7 +234,8 @@ async def check_for_banners():
         extracted_text = pytesseract.image_to_string(image, config="--psm 6")
     except pytesseract.TesseractError as e:
         extracted_text = ""
-        await dc.send_error("extracted text from ocr error", e)
+        await wl.set_error_waitlist("extracted text from ocr error", str(e))
+        await wl.set_type_waitlist("error")
 
     # Check if any of the banner texts are in the extracted text
     for banner_text in banner_texts:
@@ -226,8 +256,11 @@ async def check_for_banners():
             timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
             
             message = f"***will be spawning soon! Warriors, charge!*** ⚪ *{timestamp}*"
-            await dc.send_message(message, boss_name)
-            await dc.update_status(boss_name, 2, is_announced[boss_name])
+            await wl.set_message_waitlist(message, boss_name)
+            await wl.set_type_waitlist("message")
+
+            await wl.set_status_waitlist(boss_name, 2, is_announced[boss_name])
+            await wl.set_type_waitlist("update")
 
             # Tap the close button on the banner
             banner_close_x = random.randint(710, 720)
@@ -261,7 +294,8 @@ async def check_for_banners():
                 timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
                 
                 message = f"***Haze(Void) Weather has been detected!!!*** :space_invader: *{timestamp}*"
-                await dc.send_haze(message)
+                await wl.set_haze_waitlist(message)
+                await wl.set_type_waitlist("haze")
 
             break
     
@@ -475,7 +509,8 @@ async def go_to_mvp_tab():
                         image_bytes = cv2.imencode('.png', current_screen)[1].tobytes()
                         # Create a BytesIO object and send the image
                         image_buffer = io.BytesIO(image_bytes)
-                        await dc.send_error_image('Stuck in find (unhide_image_button)! Possible game screen obstacle', image_buffer)
+                        await wl.set_errimage_waitlist('Stuck in find (unhide_image_button)! Possible game screen obstacle', image_buffer)
+                        await wl.set_type_waitlist("error_image")
                         raise ValueError("Possible game screen obstacle")
                         
                     await tap.unhide_icons()
@@ -508,7 +543,8 @@ async def go_to_mini_tab():
                         image_bytes = cv2.imencode('.png', current_screen)[1].tobytes()
                         # Create a BytesIO object and send the image
                         image_buffer = io.BytesIO(image_bytes)
-                        await dc.send_error_image('Stuck in find (unhide_image_button)! Possible game screen obstacle', image_buffer)
+                        await wl.set_errimage_waitlist('Stuck in find (unhide_image_button)! Possible game screen obstacle', image_buffer)
+                        await wl.set_type_waitlist("error_image")
                         raise ValueError("Possible game screen obstacle")
                     
                     await tap.unhide_icons()
@@ -604,7 +640,9 @@ async def capture_battle_results(boss, boss_image):
     timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
     
     message = f"***was slain!*** 🔴 *{timestamp}*"
-    await dc.send_image(message, boss, image_buffer)
+    await wl.set_image_waitlist(message, boss, image_buffer)
+    await wl.set_type_waitlist("dead")
+
     await check_for_banners()
         
     # Close the battle result screen
@@ -614,7 +652,6 @@ async def capture_battle_results(boss, boss_image):
 # Function to close the MVP screen
 async def close_mvp_screen():
     while True:
-        # If the MVP screen is open, close it
         # If the map screen is open, close it
         if is_in('screens/mvp-screen'):
             await tap.close()
@@ -798,14 +835,14 @@ error_count = 0
 async def setup():
     global error_count, driver, current_boss, current_boss_type, TOP_MVP, TOP_MINI
     
-    while dc.is_running:
+    while wl.is_running:
         if error_count == 5:
             error_count = 0
             dc.set_is_running(False)
             await dc.alert_shutdown()
             break
             
-        driver = await start_appium_session(dc.instance_udid)
+        driver = await start_appium_session(wl.instance_udid)
         print(driver)
         # Set the first boss (anchor boss) to be scanned for each type
         TOP_MVP = "Carnage Kabuto"
@@ -834,31 +871,31 @@ async def cycle():
         start_time = time.time()
         # Go to the MVP tab and reset the list of MVPs
         try:
-            if not dc.is_running:
+            if not wl.is_running:
                 break
             await go_to_mvp_tab()
-            if not dc.is_running:
+            if not wl.is_running:
                 break
             await reset_bosses(TOP_MVP)
             # Scan for MVPs and then close the MVP screen
-            if not dc.is_running:
+            if not wl.is_running:
                 break
             await scan_mvps()
-            if not dc.is_running:
+            if not wl.is_running:
                 break
             await close_mvp_screen()
             # Go to the MINI tab and reset the list of MINIs
-            if not dc.is_running:
+            if not wl.is_running:
                 break
             await go_to_mini_tab()
-            if not dc.is_running:
+            if not wl.is_running:
                 break
             await reset_bosses(TOP_MINI)
             # Scan for MINIs and then close the MVP screen
-            if not dc.is_running:
+            if not wl.is_running:
                 break
             await scan_minis()
-            if not dc.is_running:
+            if not wl.is_running:
                 break
             await close_mvp_screen()
             
@@ -871,7 +908,6 @@ async def cycle():
             
         except Exception as e:
             error_count += 1
-            await dc.send_error(f'Error BRO. Trying to restart {error_count}', e)
+            await wl.set_error_waitlist(f'Error BRO. Trying to restart {error_count}', str(e))
+            await wl.set_type_waitlist("error")
             break
-    
-        
