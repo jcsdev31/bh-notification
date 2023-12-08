@@ -59,9 +59,7 @@ def get_haze_waitlist():
     return pop_from_list_and_save(0, 'haze.json')
 
 def get_image_waitlist():
-    new_image = None
-    while not new_image:
-        new_image = pop_from_list_and_save(0, 'image.json')
+    new_image = pop_from_list_and_save(0, 'image.json')
     filename, message, boss_name = new_image
     image = Image.open(filename)
     image_buffer = BytesIO()
@@ -82,9 +80,7 @@ def get_error_waitlist():
     return pop_from_list_and_save(0, 'error.json')
 
 def get_errimage_waitlist():
-    new_image = None
-    while not new_image:
-        new_image = pop_from_list_and_save(0, 'errimage.json')
+    new_image = pop_from_list_and_save(0, 'errimage.json')
     filename, message = new_image
     image = Image.open(filename)
     image_buffer = BytesIO()
@@ -98,18 +94,32 @@ def get_errimage_waitlist():
         print(f"Error deleting the original image file: {e}")
     return [message, image_buffer]
 
+def check_status_waitlist():
+    return load_data_from_file('status.json')
+
+def check_message_waitlist():
+    return load_data_from_file('message.json')
+
+def check_image_waitlist():
+    return load_data_from_file('image.json')
+
+def check_haze_waitlist():
+    return load_data_from_file('haze.json')
+
+def check_error_waitlist():
+    return load_data_from_file('error.json')
+
+def check_errimage_waitlist():
+    return load_data_from_file('errimage.json')
+
 def load_data_from_file(filename):
-    success = False
-    while not success:
-        try:
-            with open(filename, 'r') as file:
-                data = json.load(file)
-            success = True
-        except (FileNotFoundError, json.decoder.JSONDecodeError):
-            data = []
-            success = True
-        except Exception as e:
-            print(f"Error opening file {filename}: {e}")
+    try:
+        with open(filename, 'r') as file:
+            data = json.load(file)
+    except (FileNotFoundError, json.decoder.JSONDecodeError):
+        data = []
+    except Exception as e:
+        print(f"Error opening file {filename}: {e}")
 
     return data
 

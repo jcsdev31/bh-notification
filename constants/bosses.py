@@ -8,6 +8,7 @@ banner_texts = [
     "Toad w",
     "Dramoh w",
     "Deviling w",
+    "Arc An",
     "Angeling w",
     "Priest w",
     "Wolf w",
@@ -36,7 +37,6 @@ banner_texts = [
     "Gunka w",
     "Bishop w",
     "f the Dead w",
-    "Arc An",
     "Gioia w",]
 
 # Define a lookup dictionary that maps lookup boss words/phrases from the banner to their actual names

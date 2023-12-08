@@ -231,7 +231,6 @@ async def on_message(message):
             cc.active_instance = new_instance
         
             if is_this_instance():
-                wl.clear_active_guilds()
                 await message.channel.send(f'***Instance {wl.instance_id} is now active!***')
     
     # CHECK IF COMMAND_CENTER IS DIRECTED TO THIS INSTANCE
@@ -311,6 +310,7 @@ async def on_message(message):
         elif message.content.startswith('!set_instance_udid'):
             wl.instance_udid = message.content.split(' ')[1]
             await cc.channel.send(f"***Instance UDID set to: {wl.instance_udid}***")
+            wl.clear_active_guilds()
         
         elif message.content.startswith('!get_instance_udid'):
             if not wl.instance_udid:
@@ -335,6 +335,12 @@ async def on_message(message):
             # Extract the announcement content after the command
             announcement_content = message.content[len('!send_announcement '):]
             await send_announcement(announcement_content)
+            
+        elif message.content.startswith('!get_all_active_voice_channels'):
+            await get_all_active_voice_channels()
+            
+        elif message.content.startswith('!clear_all_active_voice_channels'):
+            await clear_all_active_voice_channels()
             
 # Returns a pre-formatted emoji_id
 def getEmoji(boss_name):
@@ -421,7 +427,8 @@ async def reset_all_roles():
                 print(f"***Role {boss} does not exist in {guild.guild.name}***")
             
         await guild.setup_roles_channel(position)
-            
+        await cc.channel.send(f"***Done resetting all roles and roles-channel for {guild.guild.name}!***")
+
 async def clean_channels():
     for guild in active_guilds:
         for boss_name in bosses:
@@ -430,11 +437,13 @@ async def clean_channels():
                 channel = discord.utils.get(guild.guild.channels, name=channel_name)
                 if channel:
                     await channel.delete()
+                    print(f"{channel_name} voice channel deleted in {guild.guild.name}")
                     break
                 channel_name = f"{get_status_emoji(i)}🌟{boss_name}"
                 channel = discord.utils.get(guild.guild.channels, name=channel_name)
                 if channel:
                     await channel.delete()
+                    print(f"{channel_name} voice channel deleted in {guild.guild.name}")
                     break
         
 async def update_status(boss, status, is_announced):
@@ -451,6 +460,7 @@ async def update_status(boss, status, is_announced):
             channel = discord.utils.get(guild.guild.channels, name=channel_name)
             if channel:
                 await channel.delete()
+                print(f"{channel_name} voice channel deleted in {guild.guild.name}")
                 position = channel.position
                 is_update = True
                 break
@@ -486,6 +496,7 @@ async def update_status(boss, status, is_announced):
                 else:
                     channel = await guild.category.create_voice_channel(name=channel_name, overwrites=overwrites)
                 sent = True
+                print(f"{channel_name} voice channel created in {guild.guild.name}")
             except Exception as e:
                 print(f"Error: {e}")
                 retries += 1
@@ -516,6 +527,7 @@ async def alert_shutdown():
     for obj in active_guilds:
         await obj.live_notifications.send("***Boss Hunt Assistant turning off ...***")
     await clean_channels()
+    print("Bot is done cleaning up!")
     await cc.channel.send('***Bot is done cleaning up!***')
     wl.is_restart = True
 
@@ -527,4 +539,19 @@ async def send_announcement(message):
         role = discord.utils.get(guild.guild.roles, name=role_name)
         await guild.bot_announcements.send(f"{role.mention} {message}")
 
+async def get_all_active_voice_channels():
+    for guild in active_guilds:
+        for channel in guild.category.voice_channels:
+            print(f"{channel.name} in {guild.guild.name}")
+    
+    print("get_all_active_voice_channels done!")
+
+async def clear_all_active_voice_channels():
+    for guild in active_guilds:
+        for channel in guild.category.voice_channels:
+            print(f"{channel.name} deleted in {guild.guild.name}")
+            await channel.delete()
+            
+    print("clear_all_active_voice_channels done!")
+    
 client.run(config.BOT_TOKEN)

@@ -98,50 +98,137 @@ async def on_ready():
             active_guilds.append(active_guild)
             print(f"***{active_guild.guild.name} (ID: {active_guild.guild.id}) has been set as an active guild!***")
     
+    await process_items()
+            
+@client.event
+async def on_disconnect():
+    print('Bot disconnected from Discord!')
+    
 async def process_items():
+    print('process_items starting')
     while True:
         type = wl.get_type_waitlist()
 
         if type == "haze":
-            new_haze = None
-            while not new_haze:
-                new_haze = wl.get_haze_waitlist()
-            await send_haze(new_haze)
+            is_not_empty = wl.check_haze_waitlist()
+            if is_not_empty:
+                await process_haze()
+            else:
+                await cc.channel.send(f"{cc.admin_id} ⚠️⚠️ ***{wl.instance_id} haze type detected but no haze to push!*** ⚠️⚠️")
+                
         elif type == "message":
-            new_message = None
-            while not new_message:
-                new_message = wl.get_message_waitlist()
-            message, boss_name = new_message
-            await send_message(message, boss_name)
+            is_not_empty = wl.check_message_waitlist()
+            if is_not_empty:
+                await process_message()
+            else:
+                await cc.channel.send(f"{cc.admin_id} ⚠️⚠️ ***{wl.instance_id} message type detected but no message to push!*** ⚠️⚠️")
+                
         elif type == "dead":
-            new_image = wl.get_image_waitlist()
-            message, boss_name, image_buffer = new_image
-            await send_image(message, boss_name, image_buffer)
+            is_not_empty = wl.check_image_waitlist()
+            if is_not_empty:
+                await process_dead()
+            else:
+                await cc.channel.send(f"{cc.admin_id} ⚠️⚠️ ***{wl.instance_id} dead type detected but no dead to push!*** ⚠️⚠️")
+                
         elif type == "update":
-            new_update = None
-            while not new_update:
-                new_update = wl.get_status_waitlist()
-            boss_name, status, is_announced = new_update
-            await update_status(boss_name, status, is_announced)
+            is_not_empty = wl.check_status_waitlist()
+            if is_not_empty:
+                await process_update()
+            else:
+                await cc.channel.send(f"{cc.admin_id} ⚠️⚠️ ***{wl.instance_id} update type detected but no update to push!*** ⚠️⚠️")
+                
         elif type == "error":
-            new_error = None
-            while not new_error:
-                new_error = wl.get_error_waitlist()
-            error_report, e = new_error
-            await send_error(error_report, e)
+            is_not_empty = wl.check_error_waitlist()
+            if is_not_empty:
+                await process_error()
+            else:
+                await cc.channel.send(f"{cc.admin_id} ⚠️⚠️ ***{wl.instance_id} error type detected but no error to push!*** ⚠️⚠️")
+                
         elif type == "error_image":
-            new_errimage = wl.get_errimage_waitlist()
-            message, image_buffer = new_errimage
-            await send_error_image(message, image_buffer)
+            is_not_empty = wl.check_errimage_waitlist()
+            if is_not_empty:
+                await process_error_image()
+            else:
+                await cc.channel.send(f"{cc.admin_id} ⚠️⚠️ ***{wl.instance_id} errimage type detected but no errimage to push!*** ⚠️⚠️")
+                
+        else:
+          await pop_all_json()
                 
         await asyncio.sleep(1)
         
-@client.event
-async def on_message(message):
- 
-    if message.content.startswith('!start_instance'):
-        await process_items()
-
+async def process_haze():
+    new_haze = wl.get_haze_waitlist()
+    await send_haze(new_haze)
+    
+async def process_message():
+    new_message = wl.get_message_waitlist()
+    message, boss_name = new_message
+    await send_message(message, boss_name)
+    
+async def process_dead():
+    new_image = wl.get_image_waitlist()
+    message, boss_name, image_buffer = new_image
+    await send_image(message, boss_name, image_buffer)
+    
+async def process_update():
+    new_update = wl.get_status_waitlist()
+    boss_name, status, is_announced = new_update
+    await update_status(boss_name, status, is_announced)
+    
+async def process_error():
+    new_error = wl.get_error_waitlist()
+    error_report, e = new_error
+    await send_error(error_report, e)
+    
+async def process_error_image():
+    new_errimage = wl.get_errimage_waitlist()
+    message, image_buffer = new_errimage
+    await send_error_image(message, image_buffer)
+    
+async def pop_all_json():
+    ## UPDATE ##
+    while True:
+        type = wl.check_status_waitlist()
+        if type:
+            await process_update()
+        else:
+            break
+    ## MESSAGE ##
+    while True:
+        type = wl.check_message_waitlist()
+        if type:
+            await process_message()
+        else:
+            break
+    ## DEAD ##
+    while True:
+        type = wl.check_image_waitlist()
+        if type:
+            await process_dead()
+        else:
+            break
+    ## HAZE ##
+    while True:
+        type = wl.check_haze_waitlist()
+        if type:
+            await process_haze()
+        else:
+            break
+    ## ERROR ##
+    while True:
+        type = wl.check_error_waitlist()
+        if type:
+            await process_error()
+        else:
+            break
+    ## ERROR_IMAGE ##
+    while True:
+        type = wl.check_errimage_waitlist()
+        if type:
+            await process_error_image()
+        else:
+            break
+    
 # Returns a pre-formatted emoji_id
 def getEmoji(boss_name):
     formatted_string = boss_name.lower().replace(" ", "")
@@ -153,10 +240,11 @@ def getEmoji(boss_name):
     print("No emoji matched the provided boss name")
 
 async def send_error(error_report, e):
-    await cc.channel.send(f"{cc.admin_id} ⚠️⚠️ ***{wl.instance_id} ran into an error:*** *{error_report}* ⚠️⚠️")
     if e == "banner-not-found":
+        await cc.channel.send(f"⚠️⚠️ ***{wl.instance_id} ran into an error:*** *{error_report}* ⚠️⚠️")
         print(error_report)
     else:
+        await cc.channel.send(f"{cc.admin_id} ⚠️⚠️ ***{wl.instance_id} ran into an error:*** *{error_report}* ⚠️⚠️")
         print(str(e))
 
 async def send_error_image(message, image):
@@ -310,6 +398,7 @@ async def update_status(boss, status, is_announced):
             channel = discord.utils.get(guild.guild.channels, name=channel_name)
             if channel:
                 await channel.delete()
+                print(f"{channel_name} voice channel deleted in {guild.guild.name}")
                 position = channel.position
                 is_update = True
                 break
@@ -345,6 +434,8 @@ async def update_status(boss, status, is_announced):
                 else:
                     channel = await guild.category.create_voice_channel(name=channel_name, overwrites=overwrites)
                 sent = True
+                
+                print(f"{channel_name} voice channel created in {guild.guild.name}")
             except Exception as e:
                 print(f"Error: {e}")
                 retries += 1
