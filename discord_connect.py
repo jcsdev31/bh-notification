@@ -81,20 +81,25 @@ class Discord:
             # Send a message to the channel
             message_bot_unlock = await self.roles_channel.send('***React "<:bhbot:1180746269640114198>" to unlock the bot!***')
             await message_bot_unlock.add_reaction("<:bhbot:1180746269640114198>")
+            print('bh bot role message sent')
             
             # Send a message to the channel
             message_mvp = await self.roles_channel.send("React to your preferred MVP to get notified with that specific boss")
+            print('mvp role message sent')
             
             for mvp in mvps:
                 # Add the reaction to the message
                 await message_mvp.add_reaction(getEmoji(mvp))
+                print(f"{mvp} added as reaction")
                 await asyncio.sleep(1)
                 
             message_mini = await self.roles_channel.send("React to your preferred MINI to get notified with that specific boss")
+            print('mini role message sent')
             
             for mini in minis:
                 # Add the reaction to the message
                 await message_mini.add_reaction(getEmoji(mini))
+                print(f"{mini} added as reaction")
                 await asyncio.sleep(1)
     
     async def setup_bot_announcements(self):
@@ -342,6 +347,15 @@ async def on_message(message):
         elif message.content.startswith('!clear_all_active_voice_channels'):
             await clear_all_active_voice_channels()
             
+        elif message.content.startswith('!get_all_active_text_channels'):
+            await get_all_active_text_channels()
+            
+        elif message.content.startswith('!clear_all_active_text_channels'):
+            await clear_all_active_text_channels()
+        
+        elif message.content.startswith('!check_get_roles_channel'):
+            await check_get_roles_channel()
+            
 # Returns a pre-formatted emoji_id
 def getEmoji(boss_name):
     formatted_string = boss_name.lower().replace(" ", "")
@@ -554,4 +568,31 @@ async def clear_all_active_voice_channels():
             
     print("clear_all_active_voice_channels done!")
     
+async def get_all_active_text_channels():
+    for guild in active_guilds:
+        for channel in guild.category.text_channels:
+            print(f"{channel.name} in {guild.guild.name}")
+    
+    print("get_all_active_text_channels done!")
+
+async def clear_all_active_text_channels():
+    for guild in active_guilds:
+        for channel in guild.category.text_channels:
+            print(f"{channel.name} deleted in {guild.guild.name}")
+            await channel.delete()
+            
+    print("clear_all_active_text_channels done!")
+
+async def check_get_roles_channel():
+    for guild in active_guilds:
+        print(f'Checking get_roles_channel for {guild.guild.name}')
+        async for message in guild.roles_channel.history(limit=3):
+            print(f'Message: {message.content}')
+
+            reactions = message.reactions
+
+            # Iterate through reactions
+            for reaction in reactions:
+                print(f'Reaction {reaction.emoji}')
+
 client.run(config.BOT_TOKEN)

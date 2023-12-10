@@ -275,14 +275,14 @@ async def check_for_banners():
         # Check for various other texts that might indicate a banner
         ratio1 = fuzz.partial_ratio(extracted_text, 'Adventurer')
         ratio2 = fuzz.partial_ratio(extracted_text, 'The item')
-        ratio2 = fuzz.partial_ratio(extracted_text, 'The game')
-        ratio3 = fuzz.partial_ratio(extracted_text, 'The next')
-        ratio4 = fuzz.partial_ratio(extracted_text, 'Due to')
-        ratio5 = fuzz.partial_ratio(extracted_text, 'only')
-        ratio6 = fuzz.partial_ratio(extracted_text, 'has been')
-        ratio7 = fuzz.partial_ratio(extracted_text, 'Congrat')
+        ratio3 = fuzz.partial_ratio(extracted_text, 'The game')
+        ratio4 = fuzz.partial_ratio(extracted_text, 'The next')
+        ratio5 = fuzz.partial_ratio(extracted_text, 'Due to')
+        ratio6 = fuzz.partial_ratio(extracted_text, 'only')
+        ratio7 = fuzz.partial_ratio(extracted_text, 'has been')
+        ratio8 = fuzz.partial_ratio(extracted_text, 'Congrat')
         # If one of these texts is found, tap the close button on the banner
-        if ratio1 >= 90 or ratio2 >= 90 or ratio3 >= 90 or ratio4 >= 90 or ratio5 >= 90 or ratio6 >= 90 or ratio7 >= 90:
+        if ratio1 >= 90 or ratio2 >= 90 or ratio3 >= 90 or ratio4 >= 90 or ratio5 >= 90 or ratio6 >= 90 or ratio7 >= 90 or ratio8 >= 90:
             
             print(f"Extracted text:{extracted_text}", flush=True)
             banner_close_x = random.randint(710, 720)
@@ -290,7 +290,7 @@ async def check_for_banners():
 
             driver.tap([(banner_close_x, banner_close_y)])
             
-            if ratio6 >= 90:
+            if ratio7 >= 90:
                 timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
                 
                 message = f"***Haze(Void) Weather has been detected!!!*** :space_invader: *{timestamp}*"

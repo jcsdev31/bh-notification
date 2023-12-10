@@ -3,6 +3,7 @@ import asyncio
 import discord
 import config
 from constants.bosses import mvps, minis
+import time
 
 class CommandCenter:
     admin_id = "<@1043418696560951306>"
@@ -106,9 +107,16 @@ async def on_disconnect():
     
 async def process_items():
     print('process_items starting')
+    start_time = time.time()
     while True:
+        elapsed_time = time.time() - start_time
+        if elapsed_time >= 300:  # 300 seconds = 5 minutes
+            # Do something when 5 minutes have elapsed without changeDetected
+            await cc.channel.send(f"{cc.admin_id} ⚠️⚠️ ***{wl.instance_id} 5 minutes has passed without any updates!!! Routine check is recommended.*** ⚠️⚠️")
+            start_time = time.time()  # Reset the start time
+            
         type = wl.get_type_waitlist()
-
+        
         if type == "haze":
             is_not_empty = wl.check_haze_waitlist()
             if is_not_empty:
@@ -131,6 +139,7 @@ async def process_items():
                 await cc.channel.send(f"{cc.admin_id} ⚠️⚠️ ***{wl.instance_id} dead type detected but no dead to push!*** ⚠️⚠️")
                 
         elif type == "update":
+            start_time = time.time()
             is_not_empty = wl.check_status_waitlist()
             if is_not_empty:
                 await process_update()
