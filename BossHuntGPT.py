@@ -688,10 +688,14 @@ async def reset_bosses(anchor_boss):
     if await locate_boss(anchor_boss):
         return
     else:
+        swipe_count = 0
         while not await locate_boss(anchor_boss):
             await check_game_restarted()
             y = random.randint(150, 200)
             await swipe(y, y + 300, 100, 0)
+            swipe_count += 1
+            if swipe_count == 10:
+                raise ValueError(f"Had an issue resetting {anchor_boss}. Restarting now ...")
 
         filename = '-'.join(anchor_boss.lower().split())
         boss_image = IMG.img_sidebar[filename + '.png']

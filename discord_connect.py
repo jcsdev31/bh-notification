@@ -340,6 +340,7 @@ async def on_message(message):
             # Extract the announcement content after the command
             announcement_content = message.content[len('!send_announcement '):]
             await send_announcement(announcement_content)
+            await cc.channel.send(f"***Announcement has been sent***")
             
         elif message.content.startswith('!get_all_active_voice_channels'):
             await get_all_active_voice_channels()
