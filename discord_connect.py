@@ -552,7 +552,7 @@ async def send_announcement(message):
         
         # Check if the role already exists
         role = discord.utils.get(guild.guild.roles, name=role_name)
-        await guild.bot_announcements.send(f"{role.mention} {message}")
+        await guild.bot_announcements.send(f">>> {role.mention} {message}")
 
 async def get_all_active_voice_channels():
     for guild in active_guilds:
