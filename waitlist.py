@@ -14,6 +14,12 @@ is_restart = False
 async def set_active_guild(guild_id):
     append_to_list_and_save(guild_id, 'guild.json')
 
+async def remove_active_guild(guild_id):
+    data = load_data_from_file('guild.json')
+    updated_data = [item for item in data if item != guild_id]
+    
+    save_data_to_file(updated_data, 'guild.json')
+
 async def set_type_waitlist(message):
     append_to_list_and_save(message, 'type.json')
 
@@ -151,6 +157,15 @@ def pop_from_list_and_save(index, filename):
         return popped_item
     else:
         return None
+
+def check_if_stuck():
+    data = load_data_from_file('type.json')
+    num_items = len(data)
+    
+    if num_items > 5:
+        return True
+    else:
+        return False
 
 def clear_active_guilds():
     try:

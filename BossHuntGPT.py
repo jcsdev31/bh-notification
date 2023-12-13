@@ -871,7 +871,9 @@ async def cycle():
     
     arr = []
     while True:
-        
+        if wl.check_if_stuck():
+            await dc.cc.channel.send(f"***Instance {wl.instance_id} ran into an error!! type.json stuck...***")
+            
         start_time = time.time()
         # Go to the MVP tab and reset the list of MVPs
         try:

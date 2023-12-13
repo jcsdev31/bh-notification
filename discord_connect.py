@@ -302,6 +302,7 @@ async def on_message(message):
             for obj in active_guilds:
                 if obj.guild.id == guild_id:
                     active_guilds.remove(obj)
+                    await wl.remove_active_guild(guild_id)
                     await cc.channel.send(f"***{obj.guild.name} (ID: {obj.guild.id}) has been set to inactive!***")
         
         elif message.content.startswith('!get_all_guilds'):
