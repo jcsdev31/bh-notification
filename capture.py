@@ -1,7 +1,6 @@
 import mss
 import cv2
 import numpy as np
-import threading
 from PIL import ImageGrab
 
 def capture_region():
@@ -10,13 +9,6 @@ def capture_region():
     with mss.mss() as sct:
         # Capture the specified region as a numpy array
         screenshot = np.array(sct.grab(monitor))
-        
-        # # Display the screenshot using OpenCV
-        # cv2.imshow("Screen Capture", screenshot)
-        
-        # # Break the loop when the 'q' key is pressed
-        # if cv2.waitKey(1) & 0xFF == ord('q'):
-        #     pass
 
     return screenshot
 
@@ -50,10 +42,3 @@ def get_region():
 
 monitor = get_region()
 print(f"MONITOR: {monitor}")
-
-# # Create a thread for the capture function
-# capture_thread = threading.Thread(target=capture_region, args=())
-
-# # Start the thread to continuously capture the specified region
-# capture_thread.start()
-    
