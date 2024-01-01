@@ -153,10 +153,6 @@ async def check_for_changes(boss, boss_image, status):
                     message = "***BANNER WAS NOT DETECTED***"
                     await wl.set_message_waitlist(message, boss)
                     await wl.set_type_waitlist("message")
-
-                    message = f"{dc.getEmoji(boss)} {boss} - ***BANNER WAS NOT DETECTED***"
-                    await wl.set_error_waitlist(message, "banner-not-found")
-                    await wl.set_type_waitlist("error")
                 
                 # Get the current timestamp
                 localized_time = pendulum.now(desired_timezone)
