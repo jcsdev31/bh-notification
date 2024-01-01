@@ -37,11 +37,3 @@ async def start_appium_session(udid):
         await dc.alert_shutdown()
         
     return driver
-    
-    
-def stop_appium_session():
-    try:
-        driver.quit()
-        print("CLOSING OPEN APPIUM DRIVERS")
-    except:
-        print("No open drivers running!")
