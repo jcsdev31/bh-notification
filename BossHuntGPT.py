@@ -274,8 +274,7 @@ async def check_for_banners():
             
             # Break out of the loop once a banner text is detected and a message is sent
             break
-        elif ratio >= 61 and ratio <= 89:
-            print(f"Extracted text:{extracted_text} ALMOST DETECTED {banner_text}, RATIO:{ratio}", flush=True)
+        
         # Check for various other texts that might indicate a banner
         ratio1 = fuzz.partial_ratio(extracted_text, 'Adventurer')
         ratio2 = fuzz.partial_ratio(extracted_text, 'The item')
