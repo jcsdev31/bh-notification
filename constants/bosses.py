@@ -1,6 +1,5 @@
 # Define the words/phrases that you want to look for in the banner
 banner_texts = [
-    "Girl w",
     "Eclipse w",
     "Fly w",
     "Mastering w",
@@ -20,8 +19,6 @@ banner_texts = [
     "canth w",
     "Skeggiold w",
     "Observation w",
-    "Kabuto w",
-    "Garm w",
     "Mistress w",
     "Phreeoni w",
     "Kraken w",
@@ -42,8 +39,6 @@ banner_texts = [
 
 # Define a lookup dictionary that maps lookup boss words/phrases from the banner to their actual names
 banner_lookup = {
-    'Kabuto w': 'Carnage Kabuto',
-    'Garm w': 'Garm',
     'Mistress w': 'Mistress',
     'Phreeoni w': 'Phreeoni',
     'Kraken w': 'Kraken',
@@ -62,7 +57,6 @@ banner_lookup = {
     'f the Dead w': 'Lord of the Dead',
     'Arc An': 'Arc Angeling',
     'Gioia w': 'Gioia',
-    'Girl w': 'Mosquito Girl',
     'Eclipse w': 'Eclipse',
     'Fly w': 'Dragon Fly',
     'Mastering w': 'Mastering',
@@ -94,7 +88,6 @@ boss_status = {
 # Define a dictionary for the status of mini bosses
 # The initial status is set to -1 which might represent 'unknown' or 'not yet checked'
 minis = {
-    'Mosquito Girl': -1,
     'Dragon Fly': -1,
     'Eclipse': -1,
     'Ghostring': -1,
@@ -118,8 +111,6 @@ minis = {
 # Define a dictionary for the status of MVP bosses
 # The initial status is set to -1 which might represent 'unknown' or 'not yet checked'
 mvps = {
-    'Carnage Kabuto': -1,
-    'Garm': -1,
     'Mistress': -1,
     'Phreeoni': -1,
     'Kraken': -1,
@@ -141,7 +132,6 @@ mvps = {
 }
 
 is_announced = {
-    'Mosquito Girl': False,
     'Dragon Fly': False,
     'Eclipse': False,
     'Ghostring': False,
@@ -160,8 +150,6 @@ is_announced = {
     'Naght Sieger': False,
     'Skeggiold': False,
     'Observation': False,
-    'Carnage Kabuto': False,
-    'Garm': False,
     'Mistress': False,
     'Phreeoni': False,
     'Kraken': False,

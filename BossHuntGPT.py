@@ -870,8 +870,8 @@ async def setup():
         driver = await start_appium_session(wl.instance_udid)
         print(driver)
         # Set the first boss (anchor boss) to be scanned for each type
-        TOP_MVP = "Carnage Kabuto"
-        TOP_MINI = "Mosquito Girl"
+        TOP_MVP = "Mistress"
+        TOP_MINI = "Dragon Fly"
         
         # Save the current screen
         await save_image()
