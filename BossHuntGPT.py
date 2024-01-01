@@ -301,7 +301,7 @@ async def check_for_banners():
                 # Format the time in the desired format
                 timestamp = localized_time.format("MMM DD, YYYY hh:mm A")
                 
-                message = f"***Haze(Void) Weather has been detected!!!*** :space_invader: *{timestamp}*"
+                message = f"***Haze Weather has been detected!!!*** :space_invader: *{timestamp}*"
                 await wl.set_haze_waitlist(message)
                 await wl.set_type_waitlist("haze")
 
