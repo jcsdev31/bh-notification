@@ -136,7 +136,7 @@ class Discord:
                 self.bot_guide = await self.category.create_text_channel(name=bot_guide_name, overwrites=overwrites, position=position)
             
             
-            await self.bot_guide.send(""":red_circle: **= LONGER TIME**
+            await self.bot_guide.send(""">>> :red_circle: **= LONGER TIME**
 :orange_circle:  **= SHORT TIME**
 :yellow_circle:  **= REFRESHING SOON**
 :green_circle:  **= APPEARED**
@@ -145,7 +145,7 @@ class Discord:
         
             roles_channel_link = self.roles_channel.jump_url
         
-            await self.bot_guide.send(f"""***==============================***
+            await self.bot_guide.send(f""">>> ***==============================***
 ***== HOW TO UNLOCK THE BOT ==***
 ***==============================***
 1. Go to {roles_channel_link}
@@ -154,11 +154,11 @@ class Discord:
 **NOTE:** 
 *DO NOT SPAM REACT THE BOSSES FOR THE BOT TO REGISTER YOUR ACTION. IF YOUR REACT DIDN'T GIVE YOU THE ROLE AFTER 5 SECONDS, TRY IT AGAIN*""")
         
-            await self.bot_guide.send("""***==============================***
+            await self.bot_guide.send(""">>> ***==============================***
 ***== SETUP THE NOTIFICATION ==***
 ***==============================***""")
         
-            await self.bot_guide.send(""":mobile_phone:**PHONE**:mobile_phone: 
+            await self.bot_guide.send(""">>> :mobile_phone:**PHONE**:mobile_phone: 
 Long tap the server icon on the left sidebar, tap Notifications, then tap **"Only @mentions"**""")
         
             image_path_1 = 'bot-guide/mobile1.jpg'
@@ -171,7 +171,7 @@ Long tap the server icon on the left sidebar, tap Notifications, then tap **"Onl
             
             await self.bot_guide.send(files=[file_1, file_2])
             
-            await self.bot_guide.send(""":computer: **PC** :computer:
+            await self.bot_guide.send(""">>> :computer: **PC** :computer:
 Right click the server icon on the left sidebar, hover over Notification Settings, click **"Only @mentions"**""")
         
             await self.bot_guide.send(files=[file_3])
