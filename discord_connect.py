@@ -49,7 +49,7 @@ class Discord:
         await self.setup_category()
         await self.setup_roles_channel(None)
         await self.setup_bot_announcements()
-        await self.setup_bot_guide()
+        await self.setup_bot_guide(None)
         await self.setup_live_notifications()
         await self.setup_drop_database()
         
@@ -117,7 +117,7 @@ class Discord:
             }
             self.bot_announcements = await self.category.create_text_channel(name=bot_announcements_name, overwrites=overwrites)
         
-    async def setup_bot_guide(self):
+    async def setup_bot_guide(self, position):
         bot_guide_name = "bot-guide"
         self.bot_guide = discord.utils.get(self.category.channels, name=bot_guide_name)
         
@@ -130,7 +130,11 @@ class Discord:
                 bh_bot_role: discord.PermissionOverwrite(view_channel=True),
                 self.guild.me: discord.PermissionOverwrite(send_messages=True, add_reactions=True, view_channel=True)
             }
-            self.bot_guide = await self.category.create_text_channel(name=bot_guide_name, overwrites=overwrites)
+            if position is None:
+                self.bot_guide = await self.category.create_text_channel(name=bot_guide_name, overwrites=overwrites)
+            else:
+                self.bot_guide = await self.category.create_text_channel(name=bot_guide_name, overwrites=overwrites, position=position)
+            
             
             await self.bot_guide.send(""":red_circle: **= LONGER TIME**
 :orange_circle:  **= SHORT TIME**
@@ -358,6 +362,25 @@ async def on_message(message):
         elif message.content.startswith('!check_get_roles_channel'):
             await check_get_roles_channel()
             
+        elif message.content.startswith('!delete_all_text_channels_in_guild '):
+            guild_id = int(message.content.split(' ')[1])
+            guild = client.get_guild(guild_id)
+            category_name = "MVP/Mini Notification"
+            category = discord.utils.get(guild.categories, name=category_name)
+            
+            for channel in category.text_channels:
+                print(f"{channel.name} deleted in {guild.name}")
+                await channel.delete()
+                
+            print("clear_all_active_text_channels done!")
+                
+        elif message.content.startswith('!leave_guild '):
+            guild_id = int(message.content.split(' ')[1])
+            guild = client.get_guild(guild_id)
+            await guild.leave()
+            
+            print("bot has left the server!")
+            
 # Returns a pre-formatted emoji_id
 def getEmoji(boss_name):
     formatted_string = boss_name.lower().replace(" ", "")
@@ -444,6 +467,19 @@ async def reset_all_roles():
             
         await guild.setup_roles_channel(position)
         await cc.channel.send(f"***Done resetting all roles and roles-channel for {guild.guild.name}!***")
+        
+        bot_guide_name = "bot-guide"
+        bot_guide_channel = discord.utils.get(guild.category.channels, name=bot_guide_name)
+        
+        if bot_guide_channel:
+            await bot_guide_channel.delete()
+            position = bot_guide_channel.position
+            await cc.channel.send(f"***The bot-guide has been deleted for {guild.guild.name}!***")
+        else:
+            await cc.channel.send(f"***bot-guide not found! No channel to delete {guild.guild.name}***")
+        
+        await guild.setup_bot_guide(position)
+        await cc.channel.send(f"***Done resetting bot-guide for {guild.guild.name}!***")
 
 async def clean_channels():
     for guild in active_guilds:

@@ -21,6 +21,7 @@ banner_texts = [
     "Skeggiold w",
     "Observation w",
     "Kabuto w",
+    "Garm w",
     "Mistress w",
     "Phreeoni w",
     "Kraken w",
@@ -42,6 +43,7 @@ banner_texts = [
 # Define a lookup dictionary that maps lookup boss words/phrases from the banner to their actual names
 banner_lookup = {
     'Kabuto w': 'Carnage Kabuto',
+    'Garm w': 'Garm',
     'Mistress w': 'Mistress',
     'Phreeoni w': 'Phreeoni',
     'Kraken w': 'Kraken',
@@ -117,10 +119,11 @@ minis = {
 # The initial status is set to -1 which might represent 'unknown' or 'not yet checked'
 mvps = {
     'Carnage Kabuto': -1,
-    'Phreeoni': -1,
+    'Garm': -1,
     'Mistress': -1,
-    'Eddga': -1,
+    'Phreeoni': -1,
     'Kraken': -1,
+    'Eddga': -1,
     'Orc Hero': -1,
     'Maya': -1,
     'Pharaoh': -1,
@@ -158,6 +161,7 @@ is_announced = {
     'Skeggiold': False,
     'Observation': False,
     'Carnage Kabuto': False,
+    'Garm': False,
     'Mistress': False,
     'Phreeoni': False,
     'Kraken': False,

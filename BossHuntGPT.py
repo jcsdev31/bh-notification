@@ -8,12 +8,14 @@ import io
 import cv2
 import random
 import asyncio
-from datetime import datetime
 from PIL import Image, ImageOps
 import pytesseract
 from fuzzywuzzy import fuzz
 from constants.bosses import banner_texts, banner_lookup, minis, mvps, is_announced
 import IMG
+import pendulum
+
+desired_timezone = 'Asia/Manila'
 
 # The list of all status images for easy access later
 IMG_STATUS_LIST = [IMG.img_status['STATUS_LT'], IMG.img_status['STATUS_ST'], IMG.img_status['STATUS_RS'], IMG.img_status['STATUS_APP']]
@@ -157,7 +159,10 @@ async def check_for_changes(boss, boss_image, status):
                     await wl.set_type_waitlist("error")
                 
                 # Get the current timestamp
-                timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
+                localized_time = pendulum.now(desired_timezone)
+
+                # Format the time in the desired format
+                timestamp = localized_time.format("MMM DD, YYYY hh:mm A")
                 
                 message = f"***Appeared*** 🟢 *{timestamp}*"
                 await wl.set_message_waitlist(message, boss)
@@ -210,7 +215,10 @@ async def check_for_changes(boss, boss_image, status):
                     await wl.set_type_waitlist("error")
                 
                 # Get the current timestamp
-                timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
+                localized_time = pendulum.now(desired_timezone)
+
+                # Format the time in the desired format
+                timestamp = localized_time.format("MMM DD, YYYY hh:mm A")
                 
                 message = f"***Appeared*** 🟢 *{timestamp}*"
                 await wl.set_message_waitlist(message, boss)
@@ -253,7 +261,11 @@ async def check_for_banners():
             if boss_name in minis:
                 is_announced[boss_name] = True
             
-            timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
+            # Get the current timestamp
+            localized_time = pendulum.now(desired_timezone)
+
+            # Format the time in the desired format
+            timestamp = localized_time.format("MMM DD, YYYY hh:mm A")
             
             message = f"***will be spawning soon! Warriors, charge!*** ⚪ *{timestamp}*"
             await wl.set_message_waitlist(message, boss_name)
@@ -281,8 +293,9 @@ async def check_for_banners():
         ratio6 = fuzz.partial_ratio(extracted_text, 'only')
         ratio7 = fuzz.partial_ratio(extracted_text, 'has been')
         ratio8 = fuzz.partial_ratio(extracted_text, 'Congrat')
+        ratio9 = fuzz.partial_ratio(extracted_text, 'The world')
         # If one of these texts is found, tap the close button on the banner
-        if ratio1 >= 90 or ratio2 >= 90 or ratio3 >= 90 or ratio4 >= 90 or ratio5 >= 90 or ratio6 >= 90 or ratio7 >= 90 or ratio8 >= 90:
+        if ratio1 >= 90 or ratio2 >= 90 or ratio3 >= 90 or ratio4 >= 90 or ratio5 >= 90 or ratio6 >= 90 or ratio7 >= 90 or ratio8 >= 90 or ratio9 >= 90:
             
             print(f"Extracted text:{extracted_text}", flush=True)
             banner_close_x = random.randint(710, 720)
@@ -291,7 +304,11 @@ async def check_for_banners():
             driver.tap([(banner_close_x, banner_close_y)])
             
             if ratio7 >= 90:
-                timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
+                # Get the current timestamp
+                localized_time = pendulum.now(desired_timezone)
+
+                # Format the time in the desired format
+                timestamp = localized_time.format("MMM DD, YYYY hh:mm A")
                 
                 message = f"***Haze(Void) Weather has been detected!!!*** :space_invader: *{timestamp}*"
                 await wl.set_haze_waitlist(message)
@@ -637,7 +654,11 @@ async def capture_battle_results(boss, boss_image):
     image_buffer = io.BytesIO(image_bytes)
 
     # Send the battle result image to the Discord server
-    timestamp = datetime.now().strftime("%b %d, %Y %I:%M %p")
+    # Get the current timestamp
+    localized_time = pendulum.now(desired_timezone)
+
+    # Format the time in the desired format
+    timestamp = localized_time.format("MMM DD, YYYY hh:mm A")
     
     message = f"***was slain!*** 🔴 *{timestamp}*"
     await wl.set_image_waitlist(message, boss, image_buffer)

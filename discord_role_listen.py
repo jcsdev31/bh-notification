@@ -47,7 +47,7 @@ async def on_raw_reaction_add(payload):
     channel = guild.get_channel(channel_id)
     message = await channel.fetch_message(message_id)
     member = payload.member
-
+  
     # Get the content of the message
     message_content = message.content
     
@@ -55,7 +55,7 @@ async def on_raw_reaction_add(payload):
     if message_content == '***React "<:bhbot:1180746269640114198>" to unlock the bot!***' and not member.bot:
         role_name = "BH Bot"
         role = discord.utils.get(guild.roles, name=role_name)
-        
+
         # Add the role to the member
         await member.add_roles(role)
         print(f"Added {role_name} role to {member.display_name}")
