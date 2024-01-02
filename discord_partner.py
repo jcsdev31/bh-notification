@@ -15,7 +15,7 @@ class CommandCenter:
     active_instance = None
     
     def __init__(self):
-        self.channel = client.get_channel(self.channel_id)  # Initialize instance variable in the constructor
+        self.channel = client.get_channel(self.channel_id)
         self.guild = client.get_guild(self.guild_id)
         self.emojis = self.guild.emojis
     
